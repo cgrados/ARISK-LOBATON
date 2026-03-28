@@ -58,7 +58,7 @@ export function TransferenciaForm({ users }: { users: any[] }) {
             <Label className="text-slate-600 font-semibold flex items-center gap-1">
               <Users className="w-4 h-4 text-blue-600" /> Usuario Origen (Cede)
             </Label>
-            <Select value={sourceUserId} onValueChange={setSourceUserId}>
+            <Select value={sourceUserId} onValueChange={v => setSourceUserId(v || '')}>
               <SelectTrigger className="w-full border-blue-200 focus:ring-blue-500">
                 <SelectValue placeholder="Seleccione origen..." />
               </SelectTrigger>
@@ -80,7 +80,7 @@ export function TransferenciaForm({ users }: { users: any[] }) {
             <Label className="text-slate-600 font-semibold flex items-center gap-1">
               <Users className="w-4 h-4 text-green-600" /> Usuario Destino (Recibe)
             </Label>
-            <Select value={targetUserId} onValueChange={setTargetUserId}>
+            <Select value={targetUserId} onValueChange={v => setTargetUserId(v || '')}>
               <SelectTrigger className="w-full border-green-200 focus:ring-green-500">
                 <SelectValue placeholder="Seleccione destino..." />
               </SelectTrigger>
