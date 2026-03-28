@@ -1,0 +1,6 @@
+-- Add 'PRESENTADA' status to the solicitud_estado enum
+-- Note: In PostgreSQL, we can add values to existing enums
+ALTER TYPE solicitud_estado ADD VALUE IF NOT EXISTS 'PRESENTADA' AFTER 'EN_REVISION';
+
+-- Add 'OBSERVADO_SUPERVISOR' just in case we need a distinction
+ALTER TYPE solicitud_estado ADD VALUE IF NOT EXISTS 'OBSERVADO_SUPERVISOR' AFTER 'PRESENTADA';

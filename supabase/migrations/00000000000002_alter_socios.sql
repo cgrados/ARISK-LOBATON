@@ -1,0 +1,14 @@
+-- ALTER EXTENSION OF THE TABLE
+ALTER TABLE socios 
+  ADD COLUMN IF NOT EXISTS nro_cuenta TEXT,
+  ADD COLUMN IF NOT EXISTS nombres TEXT,
+  ADD COLUMN IF NOT EXISTS apellido_paterno TEXT,
+  ADD COLUMN IF NOT EXISTS apellido_materno TEXT,
+  ADD COLUMN IF NOT EXISTS calificacion_interna TEXT,
+  ADD COLUMN IF NOT EXISTS direccion_negocio TEXT,
+  ADD COLUMN IF NOT EXISTS distrito_negocio TEXT,
+  ADD COLUMN IF NOT EXISTS actividad_economica TEXT,
+  ADD COLUMN IF NOT EXISTS ruc TEXT,
+  ADD COLUMN IF NOT EXISTS estado_ruc TEXT,
+  ADD COLUMN IF NOT EXISTS fecha_ingreso DATE,
+  ADD COLUMN IF NOT EXISTS nro_cuenta_conyuge TEXT;
