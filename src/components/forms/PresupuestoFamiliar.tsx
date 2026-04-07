@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import { formatCurrency } from '@/lib/utils/format'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -71,7 +73,7 @@ const BudgetTable = ({ rows, setter, section, onValueChange, onLabelChange }: Bu
                   />
                 </td>
               ))}
-              <td className="p-1.5 border text-right font-bold bg-slate-50/50">S/ {rowTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td className="p-1.5 border text-right font-bold bg-slate-50/50">{formatCurrency(rowTotal)}</td>
             </tr>
           )
         })}
@@ -118,17 +120,24 @@ export function PresupuestoFamiliar({
   ])
 
   useEffect(() => {
+    // Priority 1: If we have saved data from database
     if (initialData && Object.keys(initialData).length > 0) {
       if (initialData.ingresos_detalle && Array.isArray(initialData.ingresos_detalle)) {
          const current = [...initialData.ingresos_detalle]
-         // If it's a generic label or empty, sync it with current socioCompany
-         if (socioCompany && (current[0]?.label === 'Ingreso # 1' || !current[0]?.label || current[0]?.label === 'Ingreso # 1')) {
+         
+         // Aggressive sync for the first row if it belongs to the main activity
+         const isDefaultLabel = !current[0]?.label || current[0]?.label === 'Ingreso # 1' || current[0]?.label === 'POR DEFINIR'
+         const matchesCompany = current[0]?.label === socioCompany
+         
+         if (socioCompany && (isDefaultLabel || matchesCompany)) {
             current[0] = { ...current[0], label: socioCompany }
-         }
-         // If the first row values are all zero, try to pre-fill with socioIncome
-         const allZero = !current[0]?.values || current[0].values.every((v: number) => v === 0)
-         if (socioIncome > 0 && allZero) {
-            current[0] = { ...current[0], values: Array(6).fill(socioIncome) }
+            
+            // Sync values if they were previously synced (all same) or all zero
+            const firstVal = current[0].values?.[0] || 0
+            const allSame = current[0].values?.every((v: number) => v === firstVal)
+            if (allSame || firstVal === 0) {
+               current[0].values = Array(6).fill(socioIncome || 0)
+            }
          }
          setIngresos(current)
       } else if (initialData.ingresos_detalle) {
@@ -149,20 +158,21 @@ export function PresupuestoFamiliar({
       }
 
       if (initialData.ahorro_inicial) setAhorroInicial(initialData.ahorro_inicial)
-    } else if (socioIncome || socioCompany) {
-      // Pre-fill only if it's a new evaluation or if we just want to initialize
+    } 
+    // Priority 2: New evaluation initialization
+    else if (socioIncome || socioCompany) {
       setIngresos(prev => {
         const newData = [...prev]
         newData[0] = { 
           ...newData[0], 
-          label: socioCompany || newData[0].label,
+          label: socioCompany || 'Ingreso # 1',
           values: Array(6).fill(socioIncome || 0) 
         }
         return newData
       })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData?.id || '', socioCompany, socioIncome]) // Add sync triggers
+  }, [initialData?.id || '', socioIncome, socioCompany])
+
 
   const handleValueChange = (setter: any, rowIndex: number, monthIndex: number, value: string, section: string) => {
     const num = parseFloat(value) || 0
@@ -296,7 +306,7 @@ export function PresupuestoFamiliar({
           
           <div className="bg-blue-50 p-2 text-right font-bold text-blue-900 border mb-6 flex justify-between px-6 items-center rounded-md">
             <span>TOTAL INGRESOS (6 MESES):</span>
-            <span className="text-lg">S/ {totals.totalIngresos.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span className="text-lg">{formatCurrency(totals.totalIngresos)}</span>
           </div>
 
           <SectionHeader title="Gastos Familiares Detallados" color="bg-slate-600" />
@@ -304,12 +314,12 @@ export function PresupuestoFamiliar({
           
           <div className="bg-slate-100 p-2 text-right font-bold text-slate-900 border mb-6 flex justify-between px-6 items-center rounded-md">
             <span>TOTAL GASTOS (6 MESES):</span>
-            <span className="text-lg">S/ {totals.totalGastos.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span className="text-lg">{formatCurrency(totals.totalGastos)}</span>
           </div>
 
           <div className="bg-indigo-100 p-3 text-right font-bold text-indigo-900 border-2 border-indigo-200 mb-6 flex justify-between px-6 items-center text-sm rounded-lg shadow-inner">
             <span>DISPONIBLE (INGRESOS - GASTOS):</span>
-            <span className="text-xl">S/ {totals.totalIngresos - totals.totalGastos >= 0 ? '+' : ''} {(totals.totalIngresos - totals.totalGastos).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+            <span className="text-xl">{formatCurrency(totals.totalIngresos - totals.totalGastos)}</span>
           </div>
 
           <SectionHeader title="Gastos Financieros (Deudas)" color="bg-amber-600" />
@@ -345,7 +355,7 @@ export function PresupuestoFamiliar({
                         />
                       </td>
                     ))}
-                    <td className="p-1.5 border text-right font-bold">S/ {row.values.reduce((a: number, b: number) => a + b, 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td className="p-1.5 border text-right font-bold">{formatCurrency(row.values.reduce((a: number, b: number) => a + b, 0))}</td>
                   </tr>
                 ))}
                 <tr className="bg-indigo-50/50">
@@ -353,9 +363,9 @@ export function PresupuestoFamiliar({
                     Cuota Crédito a Solicitar
                   </td>
                   {MONTHS.map((_, i) => (
-                    <td key={i} className="p-2 border text-right font-bold text-indigo-900">{cuotaSolicitada.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td key={i} className="p-2 border text-right font-bold text-indigo-900">{formatCurrency(cuotaSolicitada)}</td>
                   ))}
-                  <td className="p-2 border text-right font-bold bg-indigo-100 text-indigo-900">S/ {(cuotaSolicitada * 6).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                  <td className="p-2 border text-right font-bold bg-indigo-100 text-indigo-900">{formatCurrency(cuotaSolicitada * 6)}</td>
                 </tr>
               </tbody>
             </table>
@@ -370,7 +380,7 @@ export function PresupuestoFamiliar({
                   <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
                     <p className="text-[10px] text-slate-500 font-bold uppercase mb-1">Capacidad Sobra Mensual (Promedio)</p>
                     <p className={`text-xl font-black ${totals.totalDeudas / 6 < totals.totalIngresos / 6 ? 'text-green-600' : 'text-red-600'}`}>
-                      S/ {(totals.totalIngresos / 6 - totals.totalGastos / 6 - totals.totalDeudas / 6).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {formatCurrency(totals.totalIngresos / 6 - totals.totalGastos / 6 - totals.totalDeudas / 6)}
                     </p>
                   </div>
                   <div className="bg-white p-4 rounded-lg shadow-sm border text-center">
@@ -432,10 +442,10 @@ export function PresupuestoFamiliar({
                 <div key={i} className="bg-slate-50 p-3 rounded-lg border text-center hover:bg-slate-100 transition-colors">
                   <p className="text-[9px] font-bold text-slate-400 mb-1.5 uppercase tracking-tighter">Mes {i+1}</p>
                   <p className={`text-[11px] font-bold ${ah.deposito >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {ah.deposito >= 0 ? '+' : ''} {ah.deposito.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                    {ah.deposito >= 0 ? '+' : ''} {formatCurrency(ah.deposito)}
                   </p>
                   <div className="h-0.5 bg-slate-200 my-1 w-2/3 mx-auto"></div>
-                  <p className="text-xs font-black text-slate-800">S/ {ah.fin.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                  <p className="text-xs font-black text-slate-800">{formatCurrency(ah.fin)}</p>
                 </div>
               ))}
             </div>

@@ -18,10 +18,54 @@ interface ScoringRule {
 }
 
 const FODA_SUGGESTIONS = {
-  fortalezas: ['Experiencia en el rubro', 'Local propio', 'Clientela fidelizada', 'Buena ubicación', 'Capital propio', 'Diversificación de productos'],
-  oportunidades: ['Crecimiento del mercado', 'Nuevos proveedores', 'Temporada alta próxima', 'Acceso a nuevos créditos', 'Ampliación de local'],
-  debilidades: ['Falta de registros contables', 'Dependencia de un solo proveedor', 'Local alquilado', 'Poca experiencia en gestión', 'Inventario desordenado'],
-  amenazas: ['Competencia agresiva', 'Inestabilidad económica', 'Alza de precios de insumos', 'Cambios en regulaciones', 'Riesgo de desastres naturales']
+  fortalezas: [
+    'Experiencia en el rubro (+ 3 años)',
+    'Local propio / Posesión acreditada',
+    'Clientela fidelizada en la zona',
+    'Ubicación estratégica y flujo peatonal',
+    'Capital propio para reinversión',
+    'Diversificación de productos y servicios',
+    'Sin morosidad en el sistema financiero',
+    'Buen récord de pagos con proveedores',
+    'Conocimiento técnico especializado',
+    'Personal capacitado y de confianza'
+  ],
+  oportunidades: [
+    'Crecimiento comercial de la zona',
+    'Alianza con nuevos proveedores',
+    'Temporada alta próxima (Campaña)',
+    'Acceso a créditos preferenciales',
+    'Ampliación física del local actual',
+    'Baja competencia directa en el sector',
+    'Digitalización de ventas (Redes)',
+    'Proyectos de infraestructura cercanos',
+    'Demanda insatisfecha identificada',
+    'Estabilidad de precios de compra'
+  ],
+  debilidades: [
+    'Falta de registros contables formales',
+    'Dependencia de un solo proveedor',
+    'Local alquilado (Contrato corto)',
+    'Poca experiencia financiera/gestión',
+    'Inventario desordenado/mal gestionado',
+    'Nivel bajo de digitalización',
+    'Stock crítico insuficiente',
+    'Horario de atención limitado',
+    'Falta de personal calificado de apoyo',
+    'Escasa diferenciación de marca'
+  ],
+  amenazas: [
+    'Competencia agresiva de grandes cadenas',
+    'Inestabilidad económica / Inflación',
+    'Alza de precios de insumos básicos',
+    'Cambios en regulaciones municipales',
+    'Inseguridad ciudadana en la zona',
+    'Cambio en preferencias del consumidor',
+    'Ingreso de nuevos competidores',
+    'Fenómenos climáticos desfavorables',
+    'Restricciones de circulación/acceso',
+    'Incremento en tasas de interés'
+  ]
 }
 
 export function EvaluacionCualitativa({ 
@@ -64,6 +108,19 @@ export function EvaluacionCualitativa({
 
   const getCutoffResult = (score: number) => {
     return cutoffs.find((c: any) => score >= c.min && score <= c.max) || { action: 'SIN DATOS', color: '#94a3b8' }
+  }
+
+  const generateAutoAnalysis = () => {
+    const { fortalezas, oportunidades, debilidades, amenazas } = foda
+    let text = "SÍNTESIS DE EVALUACIÓN:\n\n"
+    
+    if (fortalezas) text += `Se identifica un perfil con fortalezas clave en: ${fortalezas.toLowerCase()}. `
+    if (debilidades) text += `A pesar de presentar debilidades como ${debilidades.toLowerCase()}, el negocio demuestra resiliencia operativa. `
+    if (oportunidades) text += `Se proyecta un escenario favorable aprovechando ${oportunidades.toLowerCase()}. `
+    if (amenazas) text += `Es vital monitorear factores externos como ${amenazas.toLowerCase()} para mitigar riesgos.\n\n`
+    
+    text += "CONCLUSIÓN: Se recomienda proceder con la operación bajo las condiciones propuestas."
+    setComentarioAnalista(text)
   }
 
   const handleSave = async (isExit: boolean) => {
@@ -156,7 +213,7 @@ export function EvaluacionCualitativa({
                 <div className="flex justify-between items-center">
                   <Label className="text-[10px] font-black uppercase">{key}</Label>
                   <Select onValueChange={(val) => setFoda((p: any) => ({ ...p, [key]: (p[key] ? p[key] + ', ' : '') + val }))} disabled={isLocked}>
-                    <SelectTrigger className="h-6 text-[9px] w-28 uppercase font-bold"><SelectValue placeholder="+ Sugerencias" /></SelectTrigger>
+                    <SelectTrigger className="h-6 text-[9px] w-auto min-w-[140px] uppercase font-bold"><SelectValue placeholder="+ Sugerencias" /></SelectTrigger>
                     <SelectContent>
                       {FODA_SUGGESTIONS[key].map(s => <SelectItem key={s} value={s} className="text-[11px]">{s}</SelectItem>)}
                     </SelectContent>
@@ -189,10 +246,20 @@ export function EvaluacionCualitativa({
         </Card>
 
         <Card>
-          <div className="bg-indigo-900 text-white px-4 py-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> <span className="text-xs font-black uppercase">Análisis Final</span></div>
+          <div className="bg-indigo-900 text-white px-4 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> <span className="text-xs font-black uppercase">Análisis Final</span></div>
+            <Button 
+              variant="ghost" 
+              className="h-6 text-[9px] text-indigo-200 hover:text-white hover:bg-indigo-800 font-bold px-2 border border-indigo-700" 
+              onClick={generateAutoAnalysis}
+              disabled={isLocked}
+            >
+              ✨ Auto-generar
+            </Button>
+          </div>
           <CardContent className="p-6">
             <textarea 
-              className="w-full h-40 p-4 text-xs border rounded-xl bg-indigo-50/10" 
+              className="w-full h-40 p-4 text-xs border rounded-xl bg-indigo-50/10 font-medium leading-relaxed" 
               placeholder="Dictamen analista..." 
               value={comentarioAnalista} 
               onChange={(e) => setComentarioAnalista(e.target.value)}

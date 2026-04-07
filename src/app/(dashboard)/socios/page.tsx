@@ -7,6 +7,8 @@ import { UploadExcelDialog } from '@/components/UploadExcelDialog'
 import { ExportExcelButton } from '@/components/ExportExcelButton'
 import { createClient } from '@/lib/supabase/server'
 import { ArrowRightLeft } from 'lucide-react'
+import { formatCurrency } from '@/lib/utils/format'
+
 
 export const dynamic = 'force-dynamic'
 
@@ -71,7 +73,8 @@ export default async function SociosPage() {
                   <TableCell className="font-medium">{socio.dni}</TableCell>
                   <TableCell>{socio.nombres_apellidos}</TableCell>
                   <TableCell>{socio.telefono}</TableCell>
-                  <TableCell>S/ {socio.ingreso_bruto_mensual?.toFixed(2)}</TableCell>
+                  <TableCell>{formatCurrency(socio.ingreso_bruto_mensual)}</TableCell>
+
                   <TableCell>
                     <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
                       {socio.clasificacion_central_riesgo || 'N/A'}

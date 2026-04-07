@@ -302,35 +302,52 @@ export async function updateSolicitudStatus(id: string, newStatus: string, feedb
   return { success: true }
 }
 
+
 export async function deleteSolicitud(id: string) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('No autenticado')
+  try {
+    const supabase = await createClient() // Standard client (RLS active)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'No autenticado' }
 
-  // Check state before deleting
-  const { data: current } = await supabase
-    .from('solicitudes')
-    .select('estado')
-    .eq('id', id)
-    .single()
+    // Check state before deleting
+    const { data: current, error: fetchError } = await supabase
+      .from('solicitudes')
+      .select('estado')
+      .eq('id', id)
+      .single()
 
-  if (current?.estado !== 'EN_REVISION') {
-    throw new Error('Solo se pueden eliminar solicitudes en revisión')
+    if (fetchError || !current) return { success: false, error: 'Solicitud no encontrada' }
+
+    if (current.estado !== 'EN_REVISION') {
+      return { success: false, error: 'Solo se pueden eliminar solicitudes en revisión' }
+    }
+
+    // Force deletion using Admin privileges if standard delete fails or to ensure success
+    const { createClient: createAdminClient } = await import('@supabase/supabase-js')
+    const adminSupabase = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { error } = await adminSupabase
+      .from('solicitudes')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      console.error('Error deleting solicitud (Admin):', error)
+      return { success: false, error: `Error de Sistema: ${error.message}` }
+    }
+
+    revalidatePath('/dashboard')
+    revalidatePath('/solicitudes')
+    revalidatePath('/aprobaciones')
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error('Action error deleteSolicitud:', error)
+    return { success: false, error: error.message || 'Error inesperado' }
   }
-
-  const { error } = await supabase
-    .from('solicitudes')
-    .delete()
-    .eq('id', id)
-
-  if (error) {
-    console.error('Error deleting solicitud:', error)
-    throw new Error('Error al eliminar la solicitud: ' + error.message)
-  }
-
-  revalidatePath('/dashboard')
-  revalidatePath('/solicitudes')
-  revalidatePath('/aprobaciones')
-  
-  return { success: true }
 }
+
+

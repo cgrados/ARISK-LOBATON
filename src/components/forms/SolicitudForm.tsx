@@ -1,6 +1,9 @@
 'use client'
 
 import { useState, useTransition, useMemo, useCallback, useEffect } from 'react'
+import { formatCurrency, formatNumber, parseFormattedNumber } from '@/lib/utils/format'
+
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -552,8 +555,8 @@ export function SolicitudForm({
                               <Input value={conyuge.dni || ''} readOnly className="h-8 bg-slate-50 text-xs font-bold" />
                           </div>
                           <div>
-                              <Label className="text-[10px] uppercase text-slate-500 font-bold">Ingresos S/</Label>
-                              <Input value={conyuge.ingresos || 0} readOnly className="h-8 bg-slate-50 text-xs font-bold" />
+                              <Label className="text-[10px] uppercase text-slate-500 font-bold">Ingresos</Label>
+                              <Input value={formatCurrency(conyuge.ingresos || 0)} readOnly className="h-8 bg-slate-50 text-xs font-bold" />
                           </div>
                           <div className="md:col-span-4">
                               <Label className="text-[10px] uppercase text-slate-500 font-bold">Central de Riesgo</Label>
@@ -628,7 +631,7 @@ export function SolicitudForm({
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 p-2 bg-amber-50 rounded-lg text-right font-bold text-amber-900 text-sm">TOTAL PATRIMONIO: S/ {totalPatrimonio.toLocaleString()}</div>
+                <div className="mt-4 p-2 bg-amber-50 rounded-lg text-right font-bold text-amber-900 text-sm">TOTAL PATRIMONIO: {formatCurrency(totalPatrimonio)}</div>
               </CardContent>
             </Card>
 
@@ -663,8 +666,8 @@ export function SolicitudForm({
                             <Input value={item.nombres_apellidos} readOnly className="h-7 text-xs font-bold bg-white" />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[9px] uppercase font-bold text-slate-400">Ingresos S/</Label>
-                            <Input value={item.ingresos} readOnly className="h-7 text-xs font-bold bg-white text-right" />
+                            <Label className="text-[9px] uppercase font-bold text-slate-400">Ingresos</Label>
+                            <Input value={formatCurrency(item.ingresos || 0)} readOnly className="h-7 text-xs font-bold bg-white text-right" />
                           </div>
                           <div className="space-y-1">
                             <Label className="text-[9px] uppercase font-bold text-slate-400">Teléfono</Label>
@@ -687,36 +690,41 @@ export function SolicitudForm({
                 <CardTitle className="text-sm font-bold text-green-900 uppercase">REQUERIMIENTO DE CRÉDITO</CardTitle>
               </CardHeader>
               <CardContent className="p-4">
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                  <div className="space-y-1">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="md:col-span-4 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Producto Financiero</Label>
                     <Select value={credito.producto} onValueChange={(v: string | null) => setCredito({ ...credito, producto: v || '' })}>
-                      <SelectTrigger className="h-9 text-xs font-bold uppercase"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9 text-[11px] font-bold uppercase overflow-hidden bg-white"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {products.map((p: any) => <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>)}
+                        {products.map((p: any) => <SelectItem key={p.name} value={p.name} className="text-[11px] uppercase font-bold">{p.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
+                  <div className="md:col-span-2 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Condición (Tasa)</Label>
                     <Select value={socioClasificacion} onValueChange={(v: string | null) => setClasificacionOverride(v || 'Normal')}>
-                      <SelectTrigger className="h-9 text-xs font-bold uppercase"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-9 text-[11px] font-bold uppercase bg-white"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                        {categories.map(cat => <SelectItem key={cat} value={cat} className="text-[11px] uppercase font-bold">{cat}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1">
+                  <div className="md:col-span-2 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Monto Solicitado (S/)</Label>
-                    <Input type="number" value={credito.monto_solicitado} onChange={e => setCredito({ ...credito, monto_solicitado: e.target.value })} className="h-9 text-xs font-bold bg-amber-50/10 text-right" />
+                    <Input 
+                      type="text" 
+                      value={formatNumber(credito.monto_solicitado)} 
+                      onChange={e => setCredito({ ...credito, monto_solicitado: parseFormattedNumber(e.target.value) })} 
+                      className="h-9 text-sm font-bold bg-amber-50/10 text-right border-blue-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                    />
                   </div>
-                  <div className="space-y-1">
+                  <div className="md:col-span-2 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Plazo (Meses)</Label>
-                    <Input type="number" value={credito.plazo_meses} onChange={e => setCredito({ ...credito, plazo_meses: e.target.value })} className="h-9 text-xs font-bold text-center" />
+                    <Input type="number" value={credito.plazo_meses} onChange={e => setCredito({ ...credito, plazo_meses: e.target.value })} className="h-9 text-sm font-bold text-center bg-white" />
                   </div>
-                  <div className="space-y-1">
+                  <div className="md:col-span-2 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Destino del Crédito</Label>
-                    <Input value={credito.destino_credito} onChange={e => setCredito({ ...credito, destino_credito: e.target.value })} className="h-9 text-xs font-medium" />
+                    <Input value={credito.destino_credito} onChange={e => setCredito({ ...credito, destino_credito: e.target.value })} className="h-9 text-xs font-medium bg-white" />
                   </div>
                 </div>
 
@@ -733,7 +741,7 @@ export function SolicitudForm({
                                <TrendingUp className="w-3 h-3" /> {socioClasificacion}
                             </div>
                           </div>
-                          <p className="text-5xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">S/ {simulatedCuota.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                          <p className="text-5xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">{formatCurrency(simulatedCuota)}</p>
                         </div>
                         <div className="flex gap-8 text-center border-l border-slate-700 pl-8">
                           <div>
@@ -750,6 +758,7 @@ export function SolicitudForm({
                 )}
               </CardContent>
             </Card>
+
 
             <div className="flex justify-end gap-4 pt-6 border-t border-dashed">
                 <Button 
@@ -866,7 +875,9 @@ export function SolicitudForm({
         scoreCualitativo={scoreCualitativo}
         clasificacion={socioClasificacion}
         recomendacion={recomendacion}
+        avales={avales}
       />
+
     </div>
   )
 }

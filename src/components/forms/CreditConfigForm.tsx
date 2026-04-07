@@ -6,11 +6,35 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { saveSystemSetting } from '@/app/actions/settings'
-import { Save, Edit, ArrowLeft, Check, Plus } from 'lucide-react'
+import { Save, Edit, ArrowLeft, Check, Plus, Trash2 } from 'lucide-react'
 
-export function CreditConfigForm({ initialData }: { initialData: any }) {
-  const [data, setData] = useState(initialData)
+
+interface Product {
+  name: string
+  max_months: number
+  rates: Record<string, { tea: number; tem: number }>
+}
+
+interface Special {
+  name: string
+  tea?: number
+  tem?: number
+  max_months?: number
+  description?: string
+  amount?: number // For backward compatibility if any
+}
+
+interface ConfigData {
+  products: Product[]
+  special: Special[]
+  categories: string[]
+  moratoria: { tea: number; tem: number }
+}
+
+export function CreditConfigForm({ initialData }: { initialData: ConfigData }) {
+  const [data, setData] = useState<ConfigData>(initialData)
   const [isPending, startTransition] = useTransition()
+
 
   // View state: 'list' | 'product' | 'special'
   const [view, setView] = useState<'list' | 'product' | 'special'>('list')
@@ -75,7 +99,37 @@ export function CreditConfigForm({ initialData }: { initialData: any }) {
       setData(newData)
     }
     setView('list')
+    setEditingIdx(null)
   }
+
+  const addProduct = () => {
+    const newProduct: Product = {
+      name: 'NUEVO PRODUCTO',
+      max_months: 60,
+      rates: {}
+    }
+
+    // Initialize rates with 0 for each category
+    data.categories.forEach((cat: string) => {
+      newProduct.rates[cat] = { tea: 0, tem: 0 }
+    })
+
+    const newData = { ...data }
+    newData.products.push(newProduct)
+    setData(newData)
+    
+    // Start editing immediately
+    startEditingProduct(newData.products.length - 1)
+  }
+
+  const deleteProduct = (idx: number) => {
+    if (confirm('¿Está seguro de eliminar este producto?')) {
+      const newData = { ...data }
+      newData.products.splice(idx, 1)
+      setData(newData)
+    }
+  }
+
 
   // --- SPECIAL EDITING ---
   const startEditingSpecial = (idx: number) => {
@@ -107,7 +161,30 @@ export function CreditConfigForm({ initialData }: { initialData: any }) {
       setData(newData)
     }
     setView('list')
+    setEditingIdx(null)
   }
+
+  const addSpecial = () => {
+    const newSpecial = {
+      name: 'NUEVA CONDICIÓN',
+      tea: 0,
+      tem: 0,
+      max_months: 60
+    }
+    const newData = { ...data }
+    newData.special.push(newSpecial)
+    setData(newData)
+    startEditingSpecial(newData.special.length - 1)
+  }
+
+  const deleteSpecial = (idx: number) => {
+    if (confirm('¿Está seguro de eliminar esta condición especial?')) {
+      const newData = { ...data }
+      newData.special.splice(idx, 1)
+      setData(newData)
+    }
+  }
+
 
   if (view === 'product' && tempProduct) {
     return (
@@ -275,7 +352,13 @@ export function CreditConfigForm({ initialData }: { initialData: any }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         <div className="space-y-4">
-          <h3 className="font-bold text-lg border-b pb-2">Productos de Crédito Principales</h3>
+          <div className="flex justify-between items-center border-b pb-2">
+            <h3 className="font-bold text-lg">Productos de Crédito Principales</h3>
+            <Button size="sm" variant="outline" onClick={addProduct} className="h-8 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100">
+              <Plus className="w-4 h-4 mr-1" /> Nuevo Producto
+            </Button>
+          </div>
+
           {data.products.map((prod: any, idx: number) => (
             <div key={idx} className="flex flex-col bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:border-amber-300 transition-colors">
               <div className="flex justify-between items-start mb-2">
@@ -283,11 +366,17 @@ export function CreditConfigForm({ initialData }: { initialData: any }) {
                   <h4 className="font-semibold text-slate-800">{prod.name}</h4>
                   <p className="text-xs text-muted-foreground mt-0.5">Plazo máximo: <span className="font-medium text-slate-700">{prod.max_months || 'N/A'} meses</span></p>
                 </div>
-                <Button variant="secondary" size="sm" onClick={() => startEditingProduct(idx)} className="h-8 shadow-sm">
-                  <Edit className="w-4 h-4 mr-2 text-amber-600" /> Editar Tasa / Plazo
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="secondary" size="sm" onClick={() => startEditingProduct(idx)} className="h-8 shadow-sm">
+                    <Edit className="w-4 h-4 mr-2 text-amber-600" /> Editar Tasa / Plazo
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => deleteProduct(idx)} className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2 mt-2">
+
                 {data.categories.map((cat: string) => (
                   <div key={cat} className="bg-slate-50 border px-2 py-1 rounded text-[10px] text-slate-600">
                     <span className="font-semibold">{cat}:</span> {prod.rates[cat]?.tea ?? 0}% TEA
@@ -300,7 +389,12 @@ export function CreditConfigForm({ initialData }: { initialData: any }) {
 
         <div className="space-y-6">
           <div className="space-y-4">
-            <h3 className="font-bold text-lg border-b pb-2">Garantías y Especiales</h3>
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-bold text-lg">Garantías y Especiales</h3>
+              <Button size="sm" variant="outline" onClick={addSpecial} className="h-8 text-indigo-600 border-indigo-200 bg-indigo-50 hover:bg-indigo-100">
+                <Plus className="w-4 h-4 mr-1" /> Nueva Condición
+              </Button>
+            </div>
             {data.special.map((spec: any, idx: number) => (
               <div key={idx} className="flex justify-between items-center bg-white border border-slate-200 rounded-lg p-4 shadow-sm hover:border-amber-300">
                 <div>
@@ -313,12 +407,18 @@ export function CreditConfigForm({ initialData }: { initialData: any }) {
                     </p>
                   )}
                 </div>
-                <Button variant="outline" size="sm" onClick={() => startEditingSpecial(idx)} className="flex-shrink-0">
-                  <Edit className="w-4 h-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => startEditingSpecial(idx)} className="h-8 w-8 p-0 text-amber-600 hover:bg-amber-50">
+                    <Edit className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => deleteSpecial(idx)} className="h-8 w-8 p-0 text-red-400 hover:text-red-600 hover:bg-red-50">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
+
 
           <div className="space-y-4">
             <h3 className="font-bold text-lg border-b pb-2 text-red-700">Tasas Moratorias Globales</h3>

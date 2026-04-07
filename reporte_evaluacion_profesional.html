@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud y Evaluación de Crédito - COOPAC LOBATON</title>
+    <style>
+        /* RESET & BASE STYLES */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            height: auto !important; 
+            overflow: visible !important; 
+            background: #f8fafc; 
+        }
+        body { 
+            font-family: 'Helvetica', 'Arial', sans-serif; 
+            line-height: 1.4; 
+            color: #1e293b; 
+        }
+        
+        /* PRINT CONFIGURATION */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+        
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: white !important; }
+            .no-print { display: none !important; }
+        }
+
+        /* PAGE STRUCTURE */
+        .page {
+            width: 21cm;
+            min-height: 29.7cm;
+            height: auto !important;
+            padding: 3cm 2.5cm; /* Precision margins: 3cm V, 2.5cm H */
+            margin: 1cm auto;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+            position: relative;
+            display: block;
+            overflow: visible;
+            page-break-after: always;
+            break-after: page;
+        }
+
+        @media print {
+            .page { 
+                margin: 0 !important; 
+                box-shadow: none !important; 
+                width: 100% !important; 
+                height: auto !important; 
+                min-height: 29.7cm !important;
+                display: block !important;
+                page-break-after: always !important;
+            }
+        }
+
+
+        /* TYPOGRAPHY */
+        h1 { font-size: 18pt; font-weight: 900; text-transform: uppercase; letter-spacing: -0.02em; margin-bottom: 2pt; color: #0f172a; }
+        h2 { font-size: 9.5pt; font-weight: 700; color: #475569; margin-bottom: 15pt; }
+        h3 { font-size: 12pt; font-weight: 900; color: #1e3a8a; text-transform: uppercase; margin-bottom: 2pt; border-bottom: 1.5pt solid #e2e8f0; padding-bottom: 1pt; margin-top: 3pt; }
+        h4 { font-size: 8.5pt; font-weight: 800; color: #1e40af; text-transform: uppercase; margin-bottom: 2pt; background: #f1f5f9; padding: 2pt 6pt; border-radius: 4px; }
+        
+        /* TABLES */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12pt; font-size: 8.5pt; }
+        table th { background: #f1f5f9; text-align: left; padding: 2pt 4pt; font-weight: 800; color: #334155; border: 0.5pt solid #cbd5e1; text-transform: uppercase; font-size: 7pt; }
+        table td { padding: 3pt 6pt; border: 0.5pt solid #e2e8f0; border-bottom: 0.5pt solid #cbd5e1; vertical-align: top; font-size: 11pt; font-weight: 800; color: #0f172a; }
+        .page-financial table td { padding: 3pt 6pt; font-size: 10pt; }
+        .page-evaluation table td { padding: 2pt 4pt; font-size: 8pt; }
+        
+        /* DECORATION */
+        .header-layout { display: flex; align-items: center; justify-content: space-between; border-bottom: 2pt solid #0f172a; padding-bottom: 10pt; margin-bottom: 20pt; }
+        .header-box { text-align: center; border-bottom: none; padding-bottom: 0; margin-bottom: 0; }
+        .solicitud-badge { display: inline-block; border: 1.5pt solid #000; padding: 5pt 15pt; font-size: 14pt; font-weight: 900; margin-top: 10pt; }
+        
+        .label { font-size: 8pt; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 1pt; display: block; }
+        .value { font-size: 11pt; font-weight: 800; color: #0f172a; min-height: 16px; border-bottom: 0.5pt dashed #e2e8f0; padding-bottom: 1px; display: block; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10pt; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8pt; }
+
+        .indicators-box { padding: 10pt; background: #f8fafc; border: 1pt solid #e2e8f0; border-radius: 8px; margin-top: 10pt; }
+        .indicator-item { display: flex; justify-content: space-between; align-items: center; padding: 3pt 0; border-bottom: 0.5pt solid #f1f5f9; }
+        
+        .risk-badge { padding: 3pt 10pt; border-radius: 20pt; font-weight: 900; font-size: 8pt; color: white; display: inline-block; }
+        .risk-low { background: #10b981; }
+        .risk-mid { background: #f59e0b; }
+        .risk-high { background: #ef4444; }
+
+        .foda-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8pt; }
+        .foda-item { border: 1pt solid #e2e8f0; padding: 4pt 6pt; border-radius: 6pt; }
+        .foda-title { font-weight: 900; font-size: 8pt; margin-bottom: 4pt; display: flex; align-items: center; gap: 4pt; }
+
+        .matrix-cell { text-align: center; font-weight: 800; font-size: 9pt; padding: 8pt; border: 1pt solid #e2e8f0; border-radius: 6pt; }
+        .matrix-pass { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+        
+        .checklist { font-size: 8.5pt; font-weight: 700; margin-top: 10pt; display: grid; grid-template-columns: 1fr 1fr; gap: 6pt; }
+        .check-item { display: flex; align-items: center; gap: 6pt; }
+        .checkbox { width: 10pt; height: 10pt; border: 1.2pt solid #0f172a; border-radius: 2pt; display: flex; justify-content: center; align-items: center; font-size: 8pt; }
+
+        /* FOOTER SIGNATURES */
+        .signatures { margin-top: 50pt; display: grid; grid-template-columns: 1fr 1fr; gap: 40pt; text-align: center; }
+        .sig-line { border-top: 1pt solid #000; padding-top: 5pt; font-size: 7.5pt; font-weight: 800; }
+    </style>
+</head>
+<body>
+
+    <!-- PÁGINA 1: DATOS GENERALES Y SOLICITUD -->
+    <div class="page page-break">
+        <div class="header-layout">
+            <div style="width: 25%;">
+                <img src="arisk-logo.png" style="height: 40pt; width: auto;" alt="ARISK">
+            </div>
+            <div class="header-box" style="width: 50%;">
+                <h1>COOPAC LOBATON RUC: 20118475870</h1>
+                <h2>MARISCAL LAS HERAS 375 - LINCE - LIMA</h2>
+            </div>
+            <div style="width: 25%; text-align: right;">
+                <p style="font-size: 8pt; font-weight: 900; color: #64748b; text-transform: uppercase;">Fecha de Solicitud</p>
+                <p style="font-size: 11pt; font-weight: 900;">07/04/2026</p>
+            </div>
+        </div>
+
+        <div class="flex justify-center" style="text-align: center; margin-bottom: 25pt;">
+
+        <h3>1. Datos Generales del Socio</h3>
+        <div style="margin-bottom: 20pt;">
+            <div class="grid-2" style="margin-bottom: 10pt;">
+                <div><span class="label">Nombres y Apellidos</span><span class="value">JUAN PABLO PEREZ RODRIGUEZ</span></div>
+                <div class="grid-2">
+                    <div><span class="label">DNI / RUC</span><span class="value">45678912</span></div>
+                    <div><span class="label">Nro. Cuenta</span><span class="value">100-45678</span></div>
+                </div>
+            </div>
+            <div class="grid-2" style="margin-bottom: 10pt;">
+                <div><span class="label">Dirección Domicilio</span><span class="value">AV. LAS FLORES 456 - SURCO, LIMA</span></div>
+                <div class="grid-3">
+                    <div><span class="label">Estado Civil</span><span class="value">CASADO</span></div>
+                    <div><span class="label">Profesión</span><span class="value">ADMINISTRADOR</span></div>
+                    <div><span class="label">Aportes Mens.</span><span class="value">S/ 20.00</span></div>
+                </div>
+            </div>
+            <div class="grid-4">
+                <div><span class="label">F. Nacimiento</span><span class="value">12/05/1985</span></div>
+                <div><span class="label">Lugar Nac.</span><span class="value">LIMA</span></div>
+                <div><span class="label">Edad</span><span class="value">38 AÑOS</span></div>
+                <div><span class="label">Teléfono</span><span class="value">987 654 321</span></div>
+            </div>
+        </div>
+
+        <h3>2. Bloque Laboral</h3>
+        <div style="margin-bottom: 20pt;">
+            <div class="grid-2" style="margin-bottom: 10pt;">
+                <div><span class="label">Actividad Económica / Empresa</span><span class="value">LOGISTICA TOTAL S.A.C.</span></div>
+                <div><span class="label">RUC Empresa</span><span class="value">20556677889</span></div>
+            </div>
+            <div class="grid-3">
+                <div><span class="label">Cargo / Función</span><span class="value">JEFE DE ALMACÉN</span></div>
+                <div><span class="label">Ingreso Mensual Bruto</span><span class="value">S/ 4,500.00</span></div>
+                <div><span class="label">Fecha de Ingreso</span><span class="value">01/03/2018</span></div>
+            </div>
+        </div>
+
+        <h3>3. Datos del Cónyuge</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50%;">Nombres y Apellidos</th>
+                    <th style="width: 15%;">DNI</th>
+                    <th style="width: 15%;">Ingresos</th>
+                    <th style="width: 20%;">Riesgo (SBS)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>MARIA ELENA SOTO VARGAS</td>
+                    <td>46781234</td>
+                    <td>S/ 2,800.00</td>
+                    <td style="font-weight: 800; color: #166534;">100% NORMAL</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>4. Patrimonio de Evaluación</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Descripción de Bienes (Inmuebles / Vehículos / Ahorros)</th>
+                    <th style="width: 20%; text-align: right;">Valor Est. (S/)</th>
+                    <th style="width: 25%;">Situación Jurídica</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Vivienda Propia (Material Noble) - Lince</td><td style="text-align: right;">S/ 350,000.00</td><td>Inscrito SUNARP</td></tr>
+                <tr><td>Vehículo Toyota Corolla 2021</td><td style="text-align: right;">S/ 55,000.00</td><td>Propio</td></tr>
+                <tr><td>Ahorros en COOPAC - Plazo Fijo</td><td style="text-align: right;">S/ 5,000.00</td><td>Activo</td></tr>
+                <tr style="background: #f8fafc; font-weight: 900;">
+                    <td style="text-align: right;">TOTAL PATRIMONIO FAMILIAR</td>
+                    <td style="text-align: right; border-bottom: 2pt double #000;">S/ 410,000.00</td>
+                    <td>-</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>5. Requerimiento de Crédito</h3>
+        <div class="grid-3" style="background: #f1f5f9; padding: 10pt; border-radius: 8pt; border: 1pt solid #e2e8f0;">
+            <div><span class="label">Producto Solicitado</span><span class="value">CREDITO ORDINARIO</span></div>
+            <div><span class="label">Monto de Capital</span><span class="value">S/ 15,000.00</span></div>
+            <div><span class="label">Plazo (Meses)</span><span class="value">24 MESES</span></div>
+        </div>
+        <div class="grid-4" style="margin-top: 10pt;">
+            <div class="col-span-2"><span class="label">Destino del Crédito</span><span class="value">MEJORAMIENTO DE VIVIENDA / SALUD</span></div>
+            <div class="col-span-2"><span class="label">Condición (Tasa)</span><span class="value" style="color: #4338ca; display: flex; flex-direction: column; line-height: 1.1;"><span>TEA: 27.57%</span><span>TEM: 2.05%</span></span></div>
+        </div>
+   </div>
+
+    <!-- PÁGINA 2: EVALUACIÓN FINANCIERA (FLUJO DE CAJA) -->
+    <div class="page page-break page-financial">
+        <h3>6. Evaluación Financiera (Flujo de Caja Mensual)</h3>
+        
+        <h4>A. Análisis Detallado de Ingresos (6 Meses)</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Concepto de Ingreso</th>
+                    <th style="text-align: right;">M-1</th>
+                    <th style="text-align: right;">M-2</th>
+                    <th style="text-align: right;">M-3</th>
+                    <th style="text-align: right;">PROMEDIO</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Sueldo Fijo Titular</td><td style="text-align: right;">4,500</td><td style="text-align: right;">4,500</td><td style="text-align: right;">4,500</td><td style="text-align: right; font-weight: 800;">4,500.00</td></tr>
+                <tr><td>Ingresos Cónyuge (60% comp.)</td><td style="text-align: right;">1,680</td><td style="text-align: right;">1,680</td><td style="text-align: right;">1,680</td><td style="text-align: right; font-weight: 800;">1,680.00</td></tr>
+                <tr><td>Otros Ingresos No recurrentes</td><td style="text-align: right;">300</td><td style="text-align: right;">200</td><td style="text-align: right;">400</td><td style="text-align: right; font-weight: 800;">300.00</td></tr>
+                <tr style="font-weight: 900; background: #f8fafc;">
+                    <td>TOTAL INGRESOS OPERATIVOS</td>
+                    <td colspan="3"></td>
+                    <td style="text-align: right; color: #166534;">S/ 6,480.00</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4>B. Gastos Familiares y Operativos</h4>
+        <div class="grid-2" style="gap: 20pt;">
+            <table>
+                <thead><tr><th>Gastos Fijos</th><th style="text-align: right;">Monto</th></tr></thead>
+                <tbody>
+                    <tr><td>Alimentación</td><td style="text-align: right;">1,200.00</td></tr>
+                    <tr><td>Servicios (Luz, Agua)</td><td style="text-align: right;">250.00</td></tr>
+                    <tr><td>Educación</td><td style="text-align: right;">800.00</td></tr>
+                    <tr><td>Alquiler</td><td style="text-align: right;">0.00</td></tr>
+                    <tr style="font-weight: 800; background: #f8fafc;"><td>SUBTOTAL FIJOS</td><td style="text-align: right;">2,250.00</td></tr>
+                </tbody>
+            </table>
+            <table>
+                <thead><tr><th>Gastos Variables</th><th style="text-align: right;">Monto</th></tr></thead>
+                <tbody>
+                    <tr><td>Transporte</td><td style="text-align: right;">300.00</td></tr>
+                    <tr><td>Salud</td><td style="text-align: right;">150.00</td></tr>
+                    <tr><td>Vestimenta</td><td style="text-align: right;">100.00</td></tr>
+                    <tr><td>Imprevistos (5%)</td><td style="text-align: right;">140.00</td></tr>
+                    <tr style="font-weight: 800; background: #f8fafc;"><td>SUBTOTAL VARIABLES</td><td style="text-align: right;">690.00</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4>C. Gastos Financieros y Nueva Cuota</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Entidad Financiera</th>
+                    <th>Tipo Crédito</th>
+                    <th style="text-align: right;">Saldo</th>
+                    <th style="text-align: right;">Cuota Mens.</th>
+                    <th style="text-align: right;">Clasif. SBS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>BCP</td><td>Personal</td><td style="text-align: right;">5,500</td><td style="text-align: right;">650.00</td><td>NORMAL</td></tr>
+                <tr><td>CONTINENTAL</td><td>Hipotecario</td><td style="text-align: right;">0</td><td style="text-align: right;">0.00</td><td>-</td></tr>
+                <tr style="background: #fff1f2; font-weight: 800;">
+                    <td colspan="3">NUEVA CUOTA ESTIMADA (COOPAC LOBATON)</td>
+                    <td style="text-align: right;">S/ 825.00</td>
+                    <td>PROPUESTA</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3 style="margin-top: 5pt;">7. Indicadores de Capacidad y Decisión</h3>
+        <div class="indicators-box">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 15pt;">
+                <div style="border-right: 1pt solid #e2e8f0; padding-right: 15pt;">
+                    <p style="font-size: 7.5pt; font-weight: 900; color: #64748b; margin-bottom: 5pt; text-transform: uppercase;">Resumen y Diagnóstico de Capacidad</p>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8pt; margin-bottom: 10pt;">
+                        <div style="background: #f8fafc; border: 1pt solid #e2e8f0; padding: 5pt; border-radius: 6pt; text-align: center;">
+                            <span style="font-size: 7pt; font-weight: 900; color: #94a3b8; display: block; text-transform: uppercase;">Sobrante</span>
+                            <span style="font-size: 11pt; font-weight: 900; color: #166534;">S/ 2,715</span>
+                        </div>
+                        <div style="background: #f8fafc; border: 1pt solid #e2e8f0; padding: 5pt; border-radius: 6pt; text-align: center;">
+                            <span style="font-size: 7pt; font-weight: 900; color: #94a3b8; display: block; text-transform: uppercase;">% Gasto</span>
+                            <span style="font-size: 11pt; font-weight: 900; color: #1e293b;">45.4%</span>
+                        </div>
+                        <div style="background: #f8fafc; border: 1pt solid #e2e8f0; padding: 5pt; border-radius: 6pt; text-align: center;">
+                            <span style="font-size: 7pt; font-weight: 900; color: #94a3b8; display: block; text-transform: uppercase;">% Deuda</span>
+                            <span style="font-size: 11pt; font-weight: 900; color: #1e293b;">22.8%</span>
+                        </div>
+                    </div>
+                    <div style="background: #fffbeb; border: 1pt solid #fef3c7; padding: 8pt; border-radius: 8pt;">
+                         <p style="font-size: 7pt; font-weight: 900; color: #b45309; margin-bottom: 2pt;">⚠️ ADVERTENCIA:</p>
+                         <p style="font-size: 11.5pt; font-weight: 700; color: #78350f; line-height: 1.2; font-style: italic;">
+                             CAPACIDAD LIMITADA: El socio presenta un nivel de endeudamiento moderado que requiere seguimiento cercano.
+                         </p>
+                    </div>
+                </div>
+                <div style="padding-left: 5pt; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <p style="font-size: 7.5pt; font-weight: 900; color: #64748b; margin-bottom: 8pt; text-transform: uppercase;">Semáforos de Riesgo</p>
+                    <div style="display: flex; gap: 15pt; align-items: center;">
+                         <div style="text-align: center;">
+                             <p style="font-size: 6pt; font-weight: 900; color: #94a3b8; margin-bottom: 2pt;">AHORRO</p>
+                             <div style="background: #1e293b; padding: 4pt; border-radius: 6pt; display: flex; flex-direction: column; gap: 3pt;">
+                                 <div style="width: 12pt; height: 12pt; border-radius: 50%; background: #d1d5db;"></div>
+                                 <div style="width: 12pt; height: 12pt; border-radius: 50%; background: #d1d5db;"></div>
+                                 <div style="width: 12pt; height: 12pt; border-radius: 50%; background: #22c55e;"></div>
+                             </div>
+                         </div>
+                         <div style="text-align: center;">
+                             <p style="font-size: 6pt; font-weight: 900; color: #94a3b8; margin-bottom: 2pt;">DEUDA</p>
+                             <div style="background: #1e293b; padding: 4pt; border-radius: 6pt; display: flex; flex-direction: column; gap: 3pt;">
+                                 <div style="width: 12pt; height: 12pt; border-radius: 50%; background: #d1d5db;"></div>
+                                 <div style="width: 12pt; height: 12pt; border-radius: 50%; background: #f59e0b;"></div>
+                                 <div style="width: 12pt; height: 12pt; border-radius: 50%; background: #d1d5db;"></div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PÁGINA 3: SCORING Y CRITERIOS CUALITATIVOS -->
+    <div class="page page-break page-evaluation">
+        <div style="background-color: rgba(238, 242, 255, 0.3); padding: 10pt 15pt; border-radius: 12pt; border: 1pt solid #e0e7ff; margin-bottom: 5pt; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="color: #1e3a8a; margin: 0; font-size: 16pt; letter-spacing: -0.5pt;">EVALUACIÓN SCORING - CREDIT</h2>
+                <div style="display: flex; gap: 10pt; font-size: 7.5pt; font-weight: 900; color: #475569; margin-top: 4pt; text-transform: uppercase;">
+                    <span style="color: #94a3b8; letter-spacing: 0.5pt;">Puntos de Corte:</span>
+                    <span style="color: #ef4444;">DENEGAR (0-150)</span>
+                    <span style="color: #f59e0b;">REVISAR (151-180)</span>
+                    <span style="color: #10b981;">APROBAR (181-999)</span>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <p style="font-size: 7pt; font-weight: 900; color: #6366f1; text-transform: uppercase; margin-bottom: 2pt; letter-spacing: 1pt;">Dictamen Final</p>
+                <div style="background-color: #10b981; color: white; padding: 4pt 15pt; border-radius: 8pt; font-size: 14pt; font-weight: 900; border: 1.5pt solid #6ee7b7; text-transform: uppercase; box-shadow: 0 4pt 6pt -1pt rgba(0, 0, 0, 0.1);">APROBADO</div>
+            </div>
+        </div>
+        <div class="grid-2" style="gap: 8pt;">
+            <table>
+                <thead><tr><th>VARIABLE EVALUADA</th><th style="text-align: right;">PTAJE</th></tr></thead>
+                <tbody>
+                    <tr><td>EDAD (38 AÑOS)</td><td style="text-align: right;">45</td></tr>
+                    <tr><td>VIVIENDA PROPIA (INSCRITA)</td><td style="text-align: right;">80</td></tr>
+                    <tr><td>NIVEL DE INSTRUCCIÓN</td><td style="text-align: right;">40</td></tr>
+                    <tr><td>CARGA FAMILIAR (ADECUADA)</td><td style="text-align: right;">35</td></tr>
+                    <tr><td>TIEMPO ACTIVIDAD LABORAL</td><td style="text-align: right;">60</td></tr>
+                    <tr style="background: #f1f5f9; font-weight: 900;"><td>SUB-TOTAL SCORING TITULAR</td><td style="text-align: right;">260 / 300</td></tr>
+                </tbody>
+            </table>
+            <table>
+                <thead><tr><th>SISTEMA FINANCIERO</th><th style="text-align: right;">PTAJE</th></tr></thead>
+                <tbody>
+                    <tr><td>CLASIFICACIÓN SBS (NORMAL)</td><td style="text-align: right;">100</td></tr>
+                    <tr><td>PUNTUALIDAD COOPAC (HISTÓRICA)</td><td style="text-align: right;">80</td></tr>
+                    <tr><td>VARIACIÓN DE SALDO (BAJO)</td><td style="text-align: right;">40</td></tr>
+                    <tr><td>EXPERIENCIA CREDITICIA</td><td style="text-align: right;">30</td></tr>
+                    <tr style="background: #f1f5f9; font-weight: 900;"><td>TOTAL PUNTOS SISTEMA</td><td style="text-align: right;">250 / 250</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>9. Análisis Estructural (FODA)</h3>
+        <div class="foda-grid">
+            <div class="foda-item" style="border-left: 4pt solid #10b981;">
+                <div class="foda-title" style="color: #065f46;"><span>FORTALEZAS</span></div>
+                <p style="font-size: 7.5pt; font-weight: 700; color: #374151;">• Propiedad propia en zona urbana consolidada.<br>• Antigüedad laboral mayor a 5 años en empresa formal.<br>• Buen historial de pagos en el sistema financiero.</p>
+            </div>
+            <div class="foda-item" style="border-left: 4pt solid #3b82f6;">
+                <div class="foda-title" style="color: #1e40af;"><span>OPORTUNIDADES</span></div>
+                <p style="font-size: 7.5pt; font-weight: 700; color: #374151;">• Compra de deuda de tarjetas externas a menor tasa.<br>• Mejora patrimonial mediante inversión en vivienda.<br>• Incremento de ingresos por línea de carrera.</p>
+            </div>
+            <div class="foda-item" style="border-left: 4pt solid #f59e0b;">
+                <div class="foda-title" style="color: #92400e;"><span>DEBILIDADES</span></div>
+                <p style="font-size: 7.5pt; font-weight: 700; color: #374151;">• Capacidad de ahorro mensual aún en etapa inicial.<br>• Cierta dependencia de ingresos fluctuantes del cónyuge.</p>
+            </div>
+            <div class="foda-item" style="border-left: 4pt solid #ef4444;">
+                <div class="foda-title" style="color: #991b1b;"><span>AMENAZAS</span></div>
+                <p style="font-size: 7.5pt; font-weight: 700; color: #374151;">• Inestabilidad económica del sector logístico.<br>• Inflación afecta el consumo familiar básico.</p>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 15pt;">10. Referencias de Verificación</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 20%;">Categoría</th>
+                    <th style="width: 40%;">Nombre / Referencia</th>
+                    <th style="width: 15%;">Teléfono</th>
+                    <th>Estado de Verificación</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Laboral / Jefe</td><td>Ing. Ricardo Luna (Gerente Log.)</td><td>966 222 333</td><td>Positiva: Trabajador cumple con sus funciones.</td></tr>
+                <tr><td>Familiar</td><td>Sra. Carmen Ruiz (Prima)</td><td>999 111 222</td><td>Verificada: Socio reside en AV LAS FLORES.</td></tr>
+                <tr><td>Hereditario</td><td>Central de Riesgos COOPAC</td><td>Interno</td><td>Sin observaciones, cliente puntual históricos.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PÁGINA 4: DICTAMEN Y CIERRE -->
+    <div class="page">
+        <h3>11. Resumen Final y Dictamen</h3>
+        
+        <div style="background: #f1f5f9; padding: 15pt; border-radius: 12pt; margin-bottom: 20pt; border: 1pt solid #e2e8f0;">
+            <div class="grid-2">
+                <div>
+                    <p style="font-size: 7.5pt; font-weight: 900; color: #475569; margin-bottom: 3pt;">CONSOLIDADO DE FLUJO (S/)</p>
+                    <p style="font-size: 15pt; font-weight: 900; color: #1e3a8a;">S/ 6,480 - S/ 3,765</p>
+                    <p style="font-size: 8.5pt; font-weight: 700; color: #64748b;">(INGRESOS MENSUALES vs GASTOS TOTALES)</p>
+                </div>
+                <div style="text-align: right;">
+                    <p style="font-size: 7.5pt; font-weight: 900; color: #475569; margin-bottom: 3pt;">RATIO DE COBERTURA</p>
+                    <p style="font-size: 22pt; font-weight: 900; color: #166534;">329 %</p>
+                    <p style="font-size: 9pt; font-weight: 900; color: #115e59; background: #ccfbf1; display: inline-block; padding: 2pt 8pt; border-radius: 4pt;">¿CUBRE CUOTA? SI</p>
+                </div>
+            </div>
+        </div>
+
+        <h4 style="background: #1e293b; color: white;">Matriz de Decisión de Crédito</h4>
+        <div class="grid-3" style="margin-bottom: 20pt; margin-top: 10pt;">
+            <div class="matrix-cell matrix-pass" style="font-size: 11pt;">SCORING > 220 pts<br><small style="opacity: 0.8; font-size: 8pt;">CUMPLE</small></div>
+            <div class="matrix-cell matrix-pass" style="font-size: 11pt;">SBS 100% NORMAL<br><small style="opacity: 0.8; font-size: 8pt;">RIESGO CONTROLADO</small></div>
+            <div class="matrix-cell matrix-pass" style="font-size: 11pt;">CAPACIDAD > 1.2x<br><small style="opacity: 0.8; font-size: 8pt;">SOLVENTE</small></div>
+        </div>
+
+        <div style="padding: 12pt; border: 2pt solid #1e40af; border-left: 10pt solid #1e40af; border-radius: 10pt; margin-bottom: 25pt; background: #eff6ff;">
+            <span class="label" style="color: #1e40af;">Límite Máximo Financiable Recomendado</span>
+            <span style="font-size: 24pt; font-weight: 900; color: #1e3a8a; display: block; margin-top: 2pt;">S/ 48,500.00</span>
+            <p style="font-size: 7.5pt; font-weight: 700; margin-top: 5pt; color: #475569; font-style: italic;">
+                * Valor calculado en base a capacidad residual neta mensual a 60 meses con factor de castigo por inflación.
+            </p>
+        </div>
+
+        <h3>12. Check-list Expediente Administrativo y Exenciones</h3>
+        <div class="grid-2" style="align-items: start; gap: 20pt; margin-top: 5pt; margin-bottom: 20pt;">
+            <div style="border: 2pt solid #f1f5f9; border-radius: 20pt; padding: 15pt;">
+                <p style="font-size: 8pt; font-weight: 900; color: #94a3b8; text-transform: uppercase; margin-bottom: 10pt; letter-spacing: 1pt;">Verificación de Documentos</p>
+                <div style="display: grid; grid-template-columns: 1fr; gap: 6pt;">
+                    <div style="display: flex; align-items: center; gap: 8pt; font-size: 11pt; font-weight: 900; color: #334155;">
+                        <div style="width: 14pt; height: 14pt; border: 1.5pt solid #1e293b; border-radius: 4pt; display: flex; align-items: center; justify-content: center; color: #1e3a8a;">✓</div>
+                        <span>1. LIQUIDACIÓN DE PRÉSTAMO</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8pt; font-size: 11pt; font-weight: 900; color: #334155;">
+                        <div style="width: 14pt; height: 14pt; border: 1.5pt solid #1e293b; border-radius: 4pt; display: flex; align-items: center; justify-content: center; color: #1e3a8a;">✓</div>
+                        <span>2. PROPUESTA DE CRÉDITO</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8pt; font-size: 8pt; font-weight: 900; color: #334155; opacity: 0.4;">
+                        <div style="width: 14pt; height: 14pt; border: 1.5pt solid #cbd5e1; border-radius: 4pt;"></div>
+                        <span>14. RECIBO DE LUZ O AGUA</span>
+                    </div>
+                    <div style="font-size: 7pt; color: #94a3b8; font-style: italic; margin-top: 5pt;">... [Resto de verificaciones dinámicas]</div>
+                </div>
+            </div>
+
+            <div style="border: 2pt solid #fde68a; background-color: rgba(254, 243, 199, 0.2); border-radius: 20pt; padding: 15pt;">
+                <p style="font-size: 8pt; font-weight: 900; color: #b45309; text-transform: uppercase; margin-bottom: 10pt; letter-spacing: 1pt;">Solicitud de Excepción</p>
+                <div style="background-color: white; border: 1pt solid #fef3c7; border-radius: 12pt; padding: 12pt; min-height: 80pt;">
+                    <p style="font-size: 11pt; font-weight: 700; color: #78350f; line-height: 1.4; font-style: italic;">
+                        "El socio no trajo su recibo de servicios, se compromete a traerlo dentro de una semana."
+                    </p>
+                </div>
+                <p style="font-size: 6pt; font-weight: 900; color: #f59e0b; text-transform: uppercase; text-align: center; margin-top: 10pt; font-style: italic;">
+                    * Justificación obligatoria por falta de documentos.
+                </p>
+            </div>
+        </div>
+
+
+        <div style="margin-top: 40pt; border-top: 0.5pt solid #e2e8f0; padding-top: 12pt; text-align: center; font-size: 7.5pt; color: #94a3b8; font-weight: 700; letter-spacing: 0.05em;">
+            DOCUMENTO GENERADO POR EL MOTOR DE EVALUACIÓN DIGITAL ARISK v0.4 - © 2026 COOPAC LOBATON
+        </div>
+    </div>
+
+    <!-- BOTÓN DE IMPRESIÓN (SOLO PANTALLA) -->
+    <div style="position: fixed; bottom: 30px; right: 30px;" class="no-print">
+        <button onclick="window.print()" style="padding: 12px 24px; background: #1e3a8a; color: white; border: none; border-radius: 10px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); font-size: 10pt; text-transform: uppercase;">
+            🖨️ Generar PDF de Evaluación
+        </button>
+    </div>
+
+</body>
+</html>

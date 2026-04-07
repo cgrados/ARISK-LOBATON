@@ -22,8 +22,9 @@ export function DeleteSolicitudButton({ id, numero }: DeleteSolicitudButtonProps
     try {
       const result = await deleteSolicitud(id)
       if (!result.success) {
-        alert('No se pudo eliminar la solicitud.')
+        alert(result.error || 'No se pudo eliminar la solicitud.')
       }
+
     } catch (error) {
       console.error('Error deleting solicitud:', error)
       alert('Error técnico al intentar eliminar la solicitud.')

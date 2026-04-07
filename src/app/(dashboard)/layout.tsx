@@ -26,14 +26,18 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   }
 
   return (
-    <div className="flex min-h-screen w-full bg-slate-50/50">
+    <div className="flex h-screen w-full overflow-hidden bg-[var(--background)] print:h-auto print:overflow-visible print:block">
       <Sidebar allowedModules={allowedModules} />
-      <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-64 w-full">
+      <div className="flex flex-1 flex-col overflow-hidden ml-72 print:m-0 print:p-0 print:ml-0 print:overflow-visible print:h-auto print:block">
         <Header />
-        <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
+        <main className="flex-1 overflow-y-auto p-8 lg:p-12 print:p-0 print:m-0 print:overflow-visible print:h-auto print:block">
           {children}
         </main>
       </div>
+
     </div>
   )
+
+
+
 }

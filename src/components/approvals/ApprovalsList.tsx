@@ -1,6 +1,8 @@
 'use client'
 
 import { useState } from 'react'
+import { formatCurrency } from '@/lib/utils/format'
+
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -88,7 +90,8 @@ export function ApprovalsList({ solicitudes: initialSolicitudes }: ApprovalsList
                   </div>
                   <div>
                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Monto</p>
-                     <p className="text-sm font-black text-slate-800">S/ {parseFloat(solicitud.monto_solicitado).toLocaleString()}</p>
+                     <p className="text-sm font-black text-slate-800">{formatCurrency(parseFloat(solicitud.monto_solicitado))}</p>
+
                   </div>
                </div>
 

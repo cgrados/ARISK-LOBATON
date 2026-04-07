@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getSolicitudes } from '@/app/actions/solicitudes'
 import { DeleteSolicitudButton } from '@/components/solicitudes/DeleteSolicitudButton'
+import { formatCurrency } from '@/lib/utils/format'
+
 
 export const dynamic = 'force-dynamic'
 
@@ -63,7 +65,7 @@ export default async function SolicitudesPage() {
                   <TableCell className="font-medium">{sol.socios?.nombres_apellidos}</TableCell>
                   <TableCell className="text-sm">{sol.socios?.dni}</TableCell>
                   <TableCell className="text-sm">{sol.producto || '-'}</TableCell>
-                  <TableCell className="text-right font-semibold">S/ {sol.monto_solicitado?.toFixed(2)}</TableCell>
+                  <TableCell className="text-right font-semibold">{formatCurrency(sol.monto_solicitado)}</TableCell>
                   <TableCell className="text-center">{sol.plazo_meses} m</TableCell>
                   <TableCell>
                     <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset ${estadoBadge(sol.estado)}`}>

@@ -8,6 +8,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Textarea } from '@/components/ui/textarea'
 import { useState, useEffect } from 'react'
 import { updateSolicitud } from '@/app/actions/solicitudes'
+import { formatCurrency } from '@/lib/utils/format'
+
 
 interface HojaResumenProps {
   solicitud: any
@@ -61,6 +63,14 @@ export function HojaResumen({
 
   const handleSaveChecklist = async () => {
     if (!onSaveResumen) return
+    
+    // VALIDACIÓN: Si falta algún documento, la excepción es obligatoria
+    const itemsFaltantes = EXPEDIENTE_ITEMS.filter(item => !checklist[item.id])
+    if (itemsFaltantes.length > 0 && (!excepcion || excepcion.trim().length === 0)) {
+       alert(`ERROR: No se puede guardar. Hay ${itemsFaltantes.length} documentos pendientes en el expediente. Debe detallar los motivos de la excepción para continuar.`)
+       return
+    }
+
     setIsSaving(true)
     try {
       await onSaveResumen({ checklist, excepcion })
@@ -172,10 +182,11 @@ export function HojaResumen({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <MetricItem label="Monto Solicitado" value={`S/ ${monto.toLocaleString()}`} subValue={`Plazo: ${plazo} meses`} color="text-indigo-600" />
+        <MetricItem label="Monto Solicitado" value={formatCurrency(monto)} subValue={`Plazo: ${plazo} meses`} color="text-indigo-600" />
         <MetricItem label="TEA Aplicada" value={`${tea}%`} subValue={`TEM: ${tem}%`} color="text-slate-800" />
-        <MetricItem label="Cuota Mensual" value={`S/ ${cuota.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="text-indigo-700" />
-        <MetricItem label="Pago Diario (Est.)" value={`S/ ${pagoDiario.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} color="text-indigo-900" />
+        <MetricItem label="Cuota Mensual" value={formatCurrency(cuota)} color="text-indigo-700" />
+        <MetricItem label="Pago Diario (Est.)" value={formatCurrency(pagoDiario)} color="text-indigo-900" />
+
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -189,27 +200,29 @@ export function HojaResumen({
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-xs font-bold">
               <span className="text-slate-500">Ingresos brutos:</span>
-              <span className="text-right text-slate-800">S/ {totalIngresos.toLocaleString()}</span>
+              <span className="text-right text-slate-800">{formatCurrency(totalIngresos)}</span>
               <span className="text-slate-500">Gastos familiares:</span>
-              <span className="text-right text-red-600">- S/ {totalGastos.toLocaleString()}</span>
+              <span className="text-right text-red-600">- {formatCurrency(totalGastos)}</span>
               <span className="text-slate-500">Ingresos netos de gastos:</span>
-              <span className="text-right text-indigo-600">S/ {ingresosNetosGastos.toLocaleString()}</span>
+              <span className="text-right text-indigo-600">{formatCurrency(ingresosNetosGastos)}</span>
               <span className="text-slate-500">Otros pagos de deudas:</span>
-              <span className="text-right text-red-600">- S/ {deudasFinancieras.toLocaleString()}</span>
+              <span className="text-right text-red-600">- {formatCurrency(deudasFinancieras)}</span>
               <div className="col-span-2 h-px bg-slate-200 my-2"></div>
               <span className="text-sm font-black text-slate-800 uppercase">Capacidad Sobra (Mensual):</span>
               <span className={`text-sm font-black text-right ${capacidadLibreTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                S/ {capacidadLibreTotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {formatCurrency(capacidadLibreTotal)}
               </span>
+
             </div>
 
             <div className={`mt-6 p-4 rounded-xl border-2 flex items-center justify-between ${cubreCuota ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
                <div>
-                  <p className="text-[10px] font-black text-slate-500 uppercase">¿Cubre Cuota de S/ {cuota.toLocaleString()}?</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase">¿Cubre Cuota de {formatCurrency(cuota)}?</p>
                   <p className={`text-xl font-black ${cubreCuota ? 'text-green-700' : 'text-red-700'}`}>
                     {cubreCuota ? 'SÍ CUBRE' : 'NO CUBRE'}
                   </p>
                </div>
+
                <div className="text-right">
                   <p className="text-[10px] font-black text-slate-500 uppercase">Margen de Cobertura</p>
                   <p className={`text-lg font-black ${cubreCuota ? 'text-green-600' : 'text-red-600'}`}>
@@ -270,13 +283,14 @@ export function HojaResumen({
            <div>
               <p className="text-indigo-200 text-xs font-black uppercase tracking-[3px] mb-2 text-center md:text-left">Límite Máximo Estimado</p>
               <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter text-center md:text-left">
-                S/ {montoMaximo.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {formatCurrency(montoMaximo)}
               </h3>
               <p className="text-indigo-300 text-[10px] font-medium mt-3 text-center md:text-left max-w-lg">
                 Este es el monto máximo que el socio podría financiar basado en su capacidad previa de 
-                <span className="text-white font-bold"> S/ {capacidadPrevia.toLocaleString()} </span> 
+                <span className="text-white font-bold"> {formatCurrency(capacidadPrevia)} </span> 
                 y el plazo de <span className="text-white font-bold">{n} meses</span> del producto actual.
               </p>
+
            </div>
            <div className="flex-1 flex justify-center md:justify-end gap-3 print:hidden">
              <Button 
@@ -371,12 +385,12 @@ export function HojaResumen({
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
-            <p className="text-[10px] text-slate-500 font-medium italic">
-              * En caso de no contar con algún documento obligatorio en este momento, sustente la excepción aquí para revisión del comité.
+            <p className={`text-[10px] font-medium italic ${EXPEDIENTE_ITEMS.filter(item => !checklist[item.id]).length > 0 && !excepcion ? 'text-red-600 font-black animate-pulse' : 'text-slate-500'}`}>
+              * {EXPEDIENTE_ITEMS.filter(item => !checklist[item.id]).length > 0 ? "OBLIGATORIO: Sustente la excepción aquí por falta de documentos en el expediente." : "En caso de no contar con algún documento obligatorio en este momento, sustente la excepción aquí."}
             </p>
             <Textarea 
               placeholder="Escriba aquí los motivos de la excepción..."
-              className="min-h-[180px] text-xs bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              className={`min-h-[180px] text-xs transition-colors ${EXPEDIENTE_ITEMS.filter(item => !checklist[item.id]).length > 0 && !excepcion ? 'bg-red-50 border-red-300 ring-1 ring-red-400 focus:bg-white' : 'bg-slate-50 border-slate-200 focus:bg-white'}`}
               value={excepcion}
               onChange={(e) => setExcepcion(e.target.value)}
               disabled={isLocked}
