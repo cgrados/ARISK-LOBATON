@@ -29,7 +29,7 @@ export function Sidebar({ allowedModules }: SidebarProps) {
   const hasAccess = (moduleId: string) => allowedModules.includes(moduleId)
 
   const navItems = [
-    { id: 'dashboard', icon: Home, href: '/dashboard', label: 'Inicio', color: 'text-blue-500' },
+    { id: 'dashboard', icon: Home, href: '/dashboard', label: 'Inicio (v1.1)', color: 'text-blue-500' },
     { id: 'socios', icon: Users, href: '/socios', label: 'Socios', color: 'text-indigo-500' },
     { id: 'solicitudes', icon: Package, href: '/solicitudes', label: 'Solicitudes', color: 'text-blue-600' },
     { id: 'aprobaciones', icon: ShoppingCart, href: '/aprobaciones', label: 'Aprobaciones', color: 'text-purple-500' },
