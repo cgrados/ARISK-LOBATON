@@ -35,9 +35,14 @@ interface BudgetTableProps {
   section: string
   onValueChange: (setter: any, rowIndex: number, monthIndex: number, value: string, section: string) => void
   onLabelChange: (setter: any, rowIndex: number, label: string) => void
+  monthlyTotals?: number[]
+  totalLabel?: string
+  totalColor?: string
 }
 
-const BudgetTable = ({ rows, setter, section, onValueChange, onLabelChange }: BudgetTableProps) => (
+const BudgetTable = ({ rows, setter, section, onValueChange, onLabelChange, monthlyTotals, totalLabel, totalColor }: BudgetTableProps) => {
+  const grandTotal = monthlyTotals ? monthlyTotals.reduce((a, b) => a + b, 0) : 0
+  return (
   <div className="overflow-x-auto border border-slate-200 rounded-lg mb-6">
     <table className="min-w-[800px] w-full text-xs text-left border-collapse">
       <thead className="bg-slate-100">
@@ -77,10 +82,19 @@ const BudgetTable = ({ rows, setter, section, onValueChange, onLabelChange }: Bu
             </tr>
           )
         })}
+        {monthlyTotals && (
+          <tr className={`${totalColor || 'bg-blue-50'} font-bold`}>
+            <td className="p-2 border font-bold text-[11px] pl-4">{totalLabel || 'TOTAL MES'}</td>
+            {monthlyTotals.map((val, i) => (
+              <td key={i} className="p-2 border text-right font-black text-[11px]">{formatCurrency(val)}</td>
+            ))}
+            <td className="p-2 border text-right font-black text-sm">{formatCurrency(grandTotal)}</td>
+          </tr>
+        )}
       </tbody>
     </table>
   </div>
-)
+)}
 
 export function PresupuestoFamiliar({ 
   solicitudId, 
@@ -239,16 +253,18 @@ export function PresupuestoFamiliar({
     const hasIngresos = totals.totalIngresos > 0
     const gastoVsIngreso = hasIngresos ? (totals.totalGastos / totals.totalIngresos) * 100 : 0
     const deudaVsIngreso = hasIngresos ? (totals.totalDeudas / totals.totalIngresos) * 100 : 0
+    const capacidadMensual = (totals.totalIngresos - totals.totalGastos - totals.totalDeudas) / 6
     
     let semaforoAhorro = 'ROJO'
-    if (gastoVsIngreso < 70) semaforoAhorro = 'VERDE'
+    if (capacidadMensual < 0) semaforoAhorro = 'ROJO'
+    else if (gastoVsIngreso < 70) semaforoAhorro = 'VERDE'
     else if (gastoVsIngreso < 90) semaforoAhorro = 'AMARILLO'
 
     let semaforoDeuda = 'VERDE'
-    if (deudaVsIngreso > 40) semaforoDeuda = 'ROJO'
+    if (deudaVsIngreso > 40 || capacidadMensual < 0) semaforoDeuda = 'ROJO'
     else if (deudaVsIngreso > 30) semaforoDeuda = 'AMARILLO'
 
-    return { gastoVsIngreso, deudaVsIngreso, semaforoAhorro, semaforoDeuda }
+    return { gastoVsIngreso, deudaVsIngreso, semaforoAhorro, semaforoDeuda, capacidadMensual }
   }, [totals])
 
   const handleSave = async (shouldExit: boolean = false) => {
@@ -302,24 +318,27 @@ export function PresupuestoFamiliar({
         <CardContent className="p-6">
           
           <SectionHeader title="Ingresos Mensuales / Origen del Ingreso" color="bg-blue-600" />
-          <BudgetTable rows={ingresos} setter={setIngresos} section="ingresos" onValueChange={handleValueChange} onLabelChange={handleLabelChange} />
-          
-          <div className="bg-blue-50 p-2 text-right font-bold text-blue-900 border mb-6 flex justify-between px-6 items-center rounded-md">
-            <span>TOTAL INGRESOS (6 MESES):</span>
-            <span className="text-lg">{formatCurrency(totals.totalIngresos)}</span>
-          </div>
+          <BudgetTable rows={ingresos} setter={setIngresos} section="ingresos" onValueChange={handleValueChange} onLabelChange={handleLabelChange} monthlyTotals={totals.monthlyTotalIngresos} totalLabel="TOTAL INGRESOS / MES" totalColor="bg-blue-50 text-blue-900" />
 
           <SectionHeader title="Gastos Familiares Detallados" color="bg-slate-600" />
-          <BudgetTable rows={gastos} setter={setGastos} section="gastos" onValueChange={handleValueChange} onLabelChange={handleLabelChange} />
-          
-          <div className="bg-slate-100 p-2 text-right font-bold text-slate-900 border mb-6 flex justify-between px-6 items-center rounded-md">
-            <span>TOTAL GASTOS (6 MESES):</span>
-            <span className="text-lg">{formatCurrency(totals.totalGastos)}</span>
-          </div>
+          <BudgetTable rows={gastos} setter={setGastos} section="gastos" onValueChange={handleValueChange} onLabelChange={handleLabelChange} monthlyTotals={totals.monthlyTotalGastos} totalLabel="TOTAL GASTOS / MES" totalColor="bg-red-50 text-red-900" />
 
-          <div className="bg-indigo-100 p-3 text-right font-bold text-indigo-900 border-2 border-indigo-200 mb-6 flex justify-between px-6 items-center text-sm rounded-lg shadow-inner">
-            <span>DISPONIBLE (INGRESOS - GASTOS):</span>
-            <span className="text-xl">{formatCurrency(totals.totalIngresos - totals.totalGastos)}</span>
+          <div className="overflow-x-auto border-2 border-indigo-200 rounded-lg mb-6 shadow-inner">
+            <table className="min-w-[800px] w-full text-xs border-collapse">
+              <tbody>
+                <tr className="bg-indigo-100 font-bold text-indigo-900">
+                  <td className="p-2.5 border border-indigo-200 font-black text-[11px] pl-4 w-[20%]">DISPONIBLE (INGRESOS - GASTOS)</td>
+                  {totals.ingresosMenosGastos.map((val: number, i: number) => (
+                    <td key={i} className={`p-2.5 border border-indigo-200 text-right font-black text-[11px] w-[10%] ${val < 0 ? 'text-red-600 bg-red-50' : ''}`}>
+                      {formatCurrency(val)}
+                    </td>
+                  ))}
+                  <td className="p-2.5 border border-indigo-200 text-right font-black text-sm w-[20%] bg-indigo-200/50">
+                    {formatCurrency(totals.totalIngresos - totals.totalGastos)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <SectionHeader title="Gastos Financieros (Deudas)" color="bg-amber-600" />
@@ -398,9 +417,13 @@ export function PresupuestoFamiliar({
                     <AlertCircle className="w-4 h-4" /> Conclusión Automática:
                   </p>
                   <p className="text-sm leading-relaxed text-slate-700 font-medium italic">
-                    {indicators.deudaVsIngreso > 40 
-                      ? "⚠️ ATENCIÓN: El socio se encuentra en estado de sobreendeudamiento. El pago mensual de deudas consume más del 40% de sus ingresos, lo que representa un riesgo alto."
-                      : "✅ CAPACIDAD ÓPTIMA: El nivel de endeudamiento es saludable y permite la asunción de la nueva cuota sin comprometer la canasta básica familiar."
+                    {indicators.capacidadMensual < 0
+                      ? `🔴 CRÍTICO: La capacidad mensual es NEGATIVA (${formatCurrency(indicators.capacidadMensual)}). Los gastos y deudas superan los ingresos del socio. No se recomienda otorgar el crédito sin reestructuración.`
+                      : indicators.deudaVsIngreso > 40 
+                        ? `⚠️ ATENCIÓN: El socio se encuentra en estado de sobreendeudamiento. El pago mensual de deudas consume más del 40% de sus ingresos (${indicators.deudaVsIngreso.toFixed(1)}%), lo que representa un riesgo alto.`
+                        : indicators.deudaVsIngreso > 30
+                          ? `⚠️ PRECAUCIÓN: El nivel de endeudamiento (${indicators.deudaVsIngreso.toFixed(1)}%) se acerca al límite recomendado. Se sugiere evaluar con cautela. Capacidad sobrante: ${formatCurrency(indicators.capacidadMensual)}/mes.`
+                          : `✅ CAPACIDAD ÓPTIMA: El nivel de endeudamiento es saludable (${indicators.deudaVsIngreso.toFixed(1)}%) y permite la asunción de la nueva cuota. Capacidad sobrante: ${formatCurrency(indicators.capacidadMensual)}/mes.`
                     }
                   </p>
                 </div>

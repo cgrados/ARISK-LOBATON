@@ -51,16 +51,40 @@ export async function createSolicitud(data: any) {
     throw new Error('No se pudo guardar la solicitud de crédito: ' + error.message)
   }
 
-  if (data.actualizar_socio && data.socio_id && data.datos_socio_editados) {
-    const socioUpdate = data.datos_socio_editados
-    socioUpdate.updated_by = user.id
-    const { error: updateError } = await supabase.from('socios').update(socioUpdate).eq('id', data.socio_id)
-    if (updateError) console.error('Error al actualizar socio:', updateError)
+  if (data.actualizar_socio) {
+    await syncSocioPhones(supabase, user.id, data)
   }
 
   revalidatePath('/solicitudes')
   revalidatePath('/socios')
   return { success: true, id: inserted.id, numero_solicitud: inserted.numero_solicitud }
+}
+
+async function syncSocioPhones(supabase: any, userId: string, data: any) {
+  // 1. Titular
+  if (data.socio_id && data.datos_socio_editados) {
+    const socioUpdate = data.datos_socio_editados
+    socioUpdate.updated_by = userId
+    await supabase.from('socios').update(socioUpdate).eq('id', data.socio_id)
+  }
+
+  // 2. Cónyuge
+  if (data.datos_conyuge?.dni && data.datos_conyuge?.telefono) {
+    await supabase.from('socios')
+      .update({ telefono: data.datos_conyuge.telefono, updated_by: userId })
+      .eq('dni', data.datos_conyuge.dni)
+  }
+
+  // 3. Avales
+  if (Array.isArray(data.datos_avales)) {
+    for (const aval of data.datos_avales) {
+      if (aval.dni && aval.telefono) {
+        await supabase.from('socios')
+          .update({ telefono: aval.telefono, updated_by: userId })
+          .eq('dni', aval.dni)
+      }
+    }
+  }
 }
 
 export async function updateSolicitud(id: string, data: any) {
@@ -91,14 +115,13 @@ export async function updateSolicitud(id: string, data: any) {
     throw new Error('Error al actualizar: ' + error.message)
   }
 
-  if (data.actualizar_socio && data.socio_id && data.datos_socio_editados) {
-    const socioUpdate = data.datos_socio_editados
-    socioUpdate.updated_by = user.id
-    await supabase.from('socios').update(socioUpdate).eq('id', data.socio_id)
+  if (data.actualizar_socio) {
+    await syncSocioPhones(supabase, user.id, data)
   }
 
   revalidatePath('/solicitudes')
   revalidatePath(`/solicitudes/${id}`)
+  revalidatePath('/socios')
   return { success: true }
 }
 
@@ -189,8 +212,8 @@ export async function savePresupuesto(solicitudId: string, data: any) {
     .upsert(payload, { onConflict: 'solicitud_id' })
 
   if (error) {
-    console.error('Error saving presupuesto:', error)
-    throw new Error('No se pudo guardar la evaluación presupuestaria')
+    console.error('Error saving presupuesto:', JSON.stringify(error))
+    throw new Error(`No se pudo guardar: ${error.message || error.code || JSON.stringify(error)}`)
   }
 
   return { success: true }
@@ -309,7 +332,10 @@ export async function deleteSolicitud(id: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { success: false, error: 'No autenticado' }
 
-    // Check state before deleting
+    // Check state and role before deleting
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isPrivileged = profile?.role === 'SUPER_ADMIN' || profile?.role === 'SUPERVISOR'
+
     const { data: current, error: fetchError } = await supabase
       .from('solicitudes')
       .select('estado')
@@ -318,7 +344,7 @@ export async function deleteSolicitud(id: string) {
 
     if (fetchError || !current) return { success: false, error: 'Solicitud no encontrada' }
 
-    if (current.estado !== 'EN_REVISION') {
+    if (!isPrivileged && current.estado !== 'EN_REVISION') {
       return { success: false, error: 'Solo se pueden eliminar solicitudes en revisión' }
     }
 

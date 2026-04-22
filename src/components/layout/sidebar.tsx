@@ -22,9 +22,10 @@ import {
 
 interface SidebarProps {
   allowedModules: string[]
+  solicitudesCount?: number | null
 }
 
-export function Sidebar({ allowedModules }: SidebarProps) {
+export function Sidebar({ allowedModules, solicitudesCount }: SidebarProps) {
   const pathname = usePathname()
   const hasAccess = (moduleId: string) => allowedModules.includes(moduleId)
 
@@ -77,8 +78,10 @@ export function Sidebar({ allowedModules }: SidebarProps) {
                   <span className={`text-base font-bold transition-colors ${isActive ? 'text-sky-800' : 'group-hover:text-slate-900'}`}>
                     {item.label}
                   </span>
-                  {item.id === 'solicitudes' && (
-                    <span className="ml-auto text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">3</span>
+                  {item.id === 'solicitudes' && solicitudesCount !== undefined && solicitudesCount !== null && solicitudesCount > 0 && (
+                    <span className="ml-auto text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+                      {solicitudesCount}
+                    </span>
                   )}
                 </Link>
                 

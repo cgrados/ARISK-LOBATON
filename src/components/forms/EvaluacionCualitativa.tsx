@@ -137,10 +137,10 @@ export function EvaluacionCualitativa({
     }
   }
 
-  const PersonScoringTable = ({ title, details, total, icon: Icon }: { title: string; details: any[]; total: number; icon: any }) => (
+  const PersonScoringTable = ({ title, subtitle, details, total, icon: Icon }: { title: string; subtitle?: string; details: any[]; total: number; icon: any }) => (
     <div className="space-y-4">
       <p className="text-[11px] font-black text-slate-500 uppercase flex items-center gap-2">
-        <Icon className="w-4 h-4 text-indigo-600" /> {title}
+        <Icon className="w-4 h-4 text-indigo-600" /> {title} {subtitle && <span className="text-indigo-600 normal-case font-bold">— {subtitle}</span>}
       </p>
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <table className="w-full text-left border-collapse text-[10px]">
@@ -177,9 +177,9 @@ export function EvaluacionCualitativa({
         </CardHeader>
         <CardContent className="p-6 space-y-12">
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-12">
-            <PersonScoringTable title="Titular" details={titular.details} total={titular.total} icon={UserCheck} />
-            {conyuge && <PersonScoringTable title="Cónyuge" details={conyuge.details} total={conyuge.total} icon={Users} />}
-            {avales.map((av, i) => <PersonScoringTable key={i} title={`Aval ${i+1}`} details={av.details} total={av.total} icon={ShieldCheck} />)}
+            <PersonScoringTable title="Titular" subtitle={socioSnapshot?.nombres_apellidos} details={titular.details} total={titular.total} icon={UserCheck} />
+            {conyuge && <PersonScoringTable title="Cónyuge" subtitle={conyugeData?.nombres_apellidos || conyugeData?.nombre || socioSnapshot?.conyuge_nombre} details={conyuge.details} total={conyuge.total} icon={Users} />}
+            {avales.map((av, i) => <PersonScoringTable key={i} title={`Aval ${i+1}`} subtitle={avalesData?.[i]?.nombres_apellidos || avalesData?.[i]?.nombre} details={av.details} total={av.total} icon={ShieldCheck} />)}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-dashed">

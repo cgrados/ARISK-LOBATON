@@ -1,0 +1,6 @@
+evaluador-v003-ariskfrontendarisk-frontend-mp45a3.1.mqghjgf6powtgdzb89upgzb7j
+dokploy-postgres.1.pz7e943llefs6vie5n7jgrknt
+dokploy-redis.1.w7ws4nxn8jp0a4s3a98ucickk
+dokploy.1.vp8vi7b2xgci9r2aukapdxt1v
+evaluador-v003-supabase-j4pksf-supabase-auth
+evaluador-v003-supabase-j4pksf-supabase-vector

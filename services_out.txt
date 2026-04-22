@@ -1,0 +1,5 @@
+ID             NAME                                                MODE         REPLICAS   IMAGE                                                      PORTS
+ep69jkj2ylld   dokploy                                             replicated   1/1        dokploy/dokploy:v0.28.8                                    
+vezhuscajj5v   dokploy-postgres                                    replicated   1/1        postgres:16                                                
+t4say7ckyw5u   dokploy-redis                                       replicated   1/1        redis:7                                                    
+wjooh59l8yjp   evaluador-v003-ariskfrontendarisk-frontend-mp45a3   replicated   1/1        evaluador-v003-ariskfrontendarisk-frontend-mp45a3:latest   

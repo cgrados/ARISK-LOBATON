@@ -113,16 +113,16 @@ export function HojaResumen({
   const scoreCualitativo = qualitativeData?.scoring?.titular?.total || 0
   const clasificacion = solicitud.clasificacion_override || 'Normal'
   
-  // Logical Recommendation
+  // Logical Recommendation (matches cutoffs: DENEGAR 0-150, REVISAR 151-180, APROBAR 181+)
   let recomendacion = 'APROBADO'
   let recomendacionColor = 'bg-green-600'
   
-  if (!cubreCuota || (capacidadPrevia / cuota) < 1.1 || scoreCualitativo <= 220) {
+  if (!cubreCuota || (capacidadPrevia / cuota) < 1.1 || (scoreCualitativo >= 151 && scoreCualitativo <= 180)) {
     recomendacion = 'OBSERVADO'
     recomendacionColor = 'bg-amber-600'
   }
   
-  if (capacidadPrevia < cuota * 0.8 || scoreCualitativo < 180) {
+  if (capacidadPrevia < cuota * 0.8 || scoreCualitativo <= 150) {
     recomendacion = 'DENEGADO'
     recomendacionColor = 'bg-red-600'
   }
@@ -171,12 +171,6 @@ export function HojaResumen({
           <Badge variant="outline" className="text-[10px] font-black border-indigo-200 text-indigo-700 px-3 py-1 uppercase tracking-widest shadow-sm">
             {solicitud?.numero_solicitud ? `SOLICITUD: ${solicitud.numero_solicitud}` : 'ESTADO: BORRADOR'}
           </Badge>
-          <Button 
-            onClick={() => window.print()}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-4 py-1 h-8 rounded-lg flex items-center gap-2 shadow-md text-[9px] uppercase tracking-tighter transition-all hover:scale-105 active:scale-95"
-          >
-            <FileText className="w-4 h-4" /> Imprimir Reporte Profesional
-          </Button>
           <p className="text-[10px] text-slate-400 uppercase font-bold tracking-tighter">Socio: {socioSnapshot?.nombres_apellidos}</p>
         </div>
       </div>
@@ -255,7 +249,7 @@ export function HojaResumen({
              <CheckItem label="Capacidad de Pago Mensual" status={cubreCuota ? 'ok' : 'fail'} targetTab="evaluacion" />
              <CheckItem 
                label={`Evaluación Cualitativa (Score: ${scoreCualitativo} pts)`} 
-               status={scoreCualitativo > 220 ? 'ok' : scoreCualitativo >= 181 ? 'warn' : 'fail'} 
+               status={scoreCualitativo >= 181 ? 'ok' : scoreCualitativo >= 151 ? 'warn' : 'fail'} 
                targetTab="cualitativa" 
              />
              <CheckItem label="Aportes Disponibles (Neto)" status="ok" targetTab="solicitud" />
@@ -264,7 +258,7 @@ export function HojaResumen({
                 <p className="text-[10px] font-black text-slate-500 uppercase mb-2 text-center tracking-[4px]">DICTAMEN SUGERIDO</p>
                 <div className={`${recomendacionColor} text-white p-5 rounded-2xl text-center shadow-lg transform transition-transform hover:scale-[1.02] duration-300`}>
                   <p className="text-2xl font-black uppercase tracking-tighter">{recomendacion}</p>
-                  <p className="text-[9px] font-bold opacity-80 mt-1">BASADO EN LOS PARÁMETROS DE RIESGO DE ARISK ENGINE</p>
+                  <p className="text-[9px] font-bold opacity-80 mt-2">BASADO EN LOS PARÁMETROS DE RIESGO DE ARISK ENGINE</p>
                 </div>
              </div>
           </CardContent>
@@ -272,42 +266,41 @@ export function HojaResumen({
       </div>
 
       {/* MAX CAPACITY BANNER */}
-      <div className="bg-gradient-to-r from-indigo-900 to-indigo-800 p-8 rounded-3xl shadow-xl border border-indigo-700 relative overflow-hidden group">
-        <div className="absolute right-[-20px] top-[-20px] opacity-10 transform rotate-12 group-hover:rotate-0 transition-transform duration-1000">
-          <Calculator className="w-48 h-48 text-white" />
+      <div className="bg-gradient-to-r from-indigo-900 to-indigo-800 p-4 rounded-2xl shadow-lg border border-indigo-700 relative overflow-hidden group">
+        <div className="absolute right-[-10px] top-[-10px] opacity-10 transform rotate-12 group-hover:rotate-0 transition-transform duration-1000">
+          <Calculator className="w-28 h-28 text-white" />
         </div>
-        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-           <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/20">
-              <TrendingUp className="w-12 h-12 text-white" />
+        <div className="relative z-10 flex items-center gap-6">
+           <div className="bg-white/10 p-2.5 rounded-xl backdrop-blur-md border border-white/20 hidden md:block">
+              <TrendingUp className="w-7 h-7 text-white" />
            </div>
-           <div>
-              <p className="text-indigo-200 text-xs font-black uppercase tracking-[3px] mb-2 text-center md:text-left">Límite Máximo Estimado</p>
-              <h3 className="text-white text-4xl md:text-5xl font-black tracking-tighter text-center md:text-left">
+           <div className="flex-shrink-0">
+              <p className="text-indigo-200 text-[10px] font-black uppercase tracking-[2px] mb-0.5">Límite Máximo Estimado</p>
+              <h3 className="text-white text-2xl font-black tracking-tighter">
                 {formatCurrency(montoMaximo)}
               </h3>
-              <p className="text-indigo-300 text-[10px] font-medium mt-3 text-center md:text-left max-w-lg">
-                Este es el monto máximo que el socio podría financiar basado en su capacidad previa de 
+              <p className="text-indigo-300 text-[9px] font-medium mt-1 max-w-sm">
+                Basado en capacidad previa de 
                 <span className="text-white font-bold"> {formatCurrency(capacidadPrevia)} </span> 
                 y el plazo de <span className="text-white font-bold">{n} meses</span> del producto actual.
               </p>
-
            </div>
-           <div className="flex-1 flex justify-center md:justify-end gap-3 print:hidden">
+           <div className="flex-1 flex justify-end gap-2 print:hidden">
              <Button 
                variant="outline" 
                onClick={() => window.print()}
-               className="bg-white border-white text-indigo-900 hover:bg-slate-100 font-black h-14 px-8 rounded-xl gap-2 shadow-2xl"
+               className="bg-white border-white text-indigo-900 hover:bg-slate-100 font-black h-10 px-5 rounded-lg gap-2 shadow-lg text-xs"
              >
-               IMPRIMIR REPORTE <ArrowRight className="w-5 h-5" />
+               IMPRIMIR REPORTE <ArrowRight className="w-4 h-4" />
              </Button>
 
              {!isPresented && (
                <Button 
                 onClick={onFinalSubmit}
                 disabled={isSaving || isLocked}
-                className="bg-green-500 hover:bg-green-600 text-white font-black h-14 px-8 rounded-xl gap-2 shadow-2xl border-b-4 border-green-700 active:border-b-0 active:translate-y-1 transition-all"
+                className="bg-green-500 hover:bg-green-600 text-white font-black h-10 px-5 rounded-lg gap-2 shadow-lg border-b-2 border-green-700 active:border-b-0 active:translate-y-0.5 transition-all text-xs"
                >
-                 ENVIAR A APROBACIÓN <ShieldCheck className="w-5 h-5" />
+                 ENVIAR A APROBACIÓN <ShieldCheck className="w-4 h-4" />
                </Button>
              )}
            </div>

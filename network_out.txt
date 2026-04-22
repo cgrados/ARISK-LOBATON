@@ -1,0 +1,8 @@
+NETWORK ID     NAME                             DRIVER    SCOPE
+e2ab5ace6782   bridge                           bridge    local
+50bd15270360   docker_gwbridge                  bridge    local
+71gof44zdodi   dokploy-network                  overlay   swarm
+92d39ae90741   evaluador-v003-supabase-j4pksf   bridge    local
+102f9ebca633   host                             host      local
+h00gsdofkmkp   ingress                          overlay   swarm
+464f72c82b49   none                             null      local

@@ -113,10 +113,10 @@ export default function ReporteriaPage() {
 
   let recomendacion = 'APROBADO'
 
-  if (capacidadPrevia < simulatedCuota || (capacidadPrevia / simulatedCuota) < 1.1 || scoreCualitativo <= 220) {
+  if (capacidadPrevia < simulatedCuota || (capacidadPrevia / simulatedCuota) < 1.1 || scoreCualitativo <= 180) {
     recomendacion = 'OBSERVADO'
   }
-  if (capacidadPrevia < simulatedCuota * 0.8 || scoreCualitativo < 180) {
+  if (capacidadPrevia < simulatedCuota * 0.8 || scoreCualitativo <= 150) {
     recomendacion = 'DESAPROBADO'
   }
 
@@ -163,21 +163,24 @@ export default function ReporteriaPage() {
                   <History className="w-4 h-4 text-slate-400" />
                   <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Solicitudes Recientes</h3>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="flex flex-col gap-2">
                   {recentList.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => handleSearch(String(item.correlativo))}
-                      className="group flex flex-col p-3 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all text-left"
+                      className="group flex items-center gap-4 p-3 bg-white border border-slate-100 rounded-xl hover:border-blue-200 hover:shadow-md transition-all text-left w-full"
                     >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-[10px] font-black text-blue-600">Nº {String(item.correlativo).padStart(3, '0')}</span>
-                        <div className={`w-1.5 h-1.5 rounded-full ${item.estado === 'APROBADO' ? 'bg-green-500' : 'bg-amber-500'}`} />
+                      <div className="flex items-center gap-3 min-w-[80px]">
+                        <div className={`w-2 h-2 rounded-full ${item.estado === 'APROBADO' ? 'bg-green-500' : 'bg-amber-500'} shrink-0`} />
+                        <span className="text-xs font-black text-blue-600">Nº {String(item.correlativo).padStart(3, '0')}</span>
                       </div>
-                      <p className="text-[11px] font-bold text-slate-700 truncate mb-1 uppercase">{item.socios?.nombres_apellidos}</p>
-                      <div className="flex items-center justify-between mt-auto pt-1 border-t border-slate-50">
-                        <span className="text-[9px] font-medium text-slate-400">{formatCurrency(item.monto_solicitado || 0)}</span>
-                        <ArrowRight className="w-3 h-3 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all" />
+                      <p className="text-[12px] font-bold text-slate-700 truncate grow uppercase">{item.socios?.nombres_apellidos}</p>
+                      <div className="flex items-center gap-6 shrink-0">
+                        <span className="text-[11px] font-black text-slate-900 border-l pl-4 border-slate-100">{formatCurrency(item.monto_solicitado || 0)}</span>
+                        <div className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${item.estado === 'APROBADO' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'} hidden sm:block`}>
+                          {item.estado}
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-500 group-hover:translate-x-1 transition-all" />
                       </div>
                     </button>
                   ))}
@@ -247,7 +250,7 @@ export default function ReporteriaPage() {
                 <CardContent className="p-4 space-y-4">
                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <span className="text-[10px] font-black uppercase text-slate-500">Scoring:</span>
-                      <span className={`text-lg font-black ${scoreCualitativo >= 221 ? 'text-green-600' : 'text-amber-600'}`}>{scoreCualitativo} Ptos</span>
+                      <span className={`text-lg font-black ${scoreCualitativo >= 180 ? 'text-green-600' : 'text-amber-600'}`}>{scoreCualitativo} Ptos</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
                       <span className="text-[10px] font-black uppercase text-slate-500">Cobertura:</span>

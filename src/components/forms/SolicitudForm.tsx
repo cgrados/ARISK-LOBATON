@@ -143,6 +143,7 @@ export function SolicitudForm({
     destino_credito: '',
     plazo_meses: '',
   })
+  const [temOverride, setTemOverride] = useState<string>('')
 
   useEffect(() => {
     if (initialData) {
@@ -225,6 +226,7 @@ export function SolicitudForm({
         ...snap,
         dni: data.dni,
         nombres_apellidos: data.nombres_apellidos,
+        telefono: data.telefono || '',
         ingresos: data.ingreso_bruto_mensual || 0,
         riesgo: data.clasificacion_central_riesgo || data.calificacion_interna || 'Normal'
       })
@@ -262,11 +264,20 @@ export function SolicitudForm({
 
   const socioClasificacion = (clasificacionOverride || editData.clasificacion_central_riesgo || 'Normal').toString()
 
-  const { resolvedTea, resolvedTem } = useMemo(() => {
-    if (!selectedProduct?.rates) return { resolvedTea: 0, resolvedTem: 0 }
+  const { baseTea, baseTem } = useMemo(() => {
+    if (!selectedProduct?.rates) return { baseTea: 0, baseTem: 0 }
     const rateRow = selectedProduct.rates[socioClasificacion] || selectedProduct.rates['Normal'] || Object.values(selectedProduct.rates)[0] as any
-    return { resolvedTea: rateRow?.tea ?? 0, resolvedTem: rateRow?.tem ?? 0 }
+    return { baseTea: rateRow?.tea ?? 0, baseTem: rateRow?.tem ?? 0 }
   }, [selectedProduct, socioClasificacion])
+
+  // Allow manual TEM override; recalculate TEA from TEM when overridden
+  const resolvedTem = temOverride !== '' ? parseFloat(temOverride) || 0 : baseTem
+  const resolvedTea = temOverride !== '' ? ((Math.pow(1 + resolvedTem / 100, 12) - 1) * 100) : baseTea
+
+  // Sync temOverride when base rate changes
+  useEffect(() => {
+    setTemOverride('')
+  }, [baseTem])
 
   const simulatedCuota = useMemo(() => {
     if (!credito.monto_solicitado || !credito.plazo_meses || resolvedTem <= 0) return 0
@@ -289,10 +300,10 @@ export function SolicitudForm({
   const clasificacion = initialData?.clasificacion_override || 'Normal'
 
   let recomendacion = 'APROBADO'
-  if (capacidadPrevia < cuota || (capacidadPrevia / cuota) < 1.1 || scoreCualitativo <= 220) {
+  if (capacidadPrevia < cuota || (capacidadPrevia / cuota) < 1.1 || scoreCualitativo <= 180) {
     recomendacion = 'OBSERVADO'
   }
-  if (capacidadPrevia < cuota * 0.8 || scoreCualitativo < 180) {
+  if (capacidadPrevia < cuota * 0.8 || scoreCualitativo <= 150) {
     recomendacion = 'DESAPROBADO'
   }
 
@@ -301,6 +312,23 @@ export function SolicitudForm({
   const handleSaveClick = (shouldExit: boolean = false) => {
     if (!socio) return alert('Busque un socio primero.')
     if (!credito.producto || !credito.monto_solicitado) return alert('Complete los datos del crédito.')
+    
+    // Validaciones de teléfono obligatorias
+    if (!editData.telefono) {
+      return alert('Debe registrar el número de teléfono del Titular antes de continuar.')
+    }
+
+    if (hasConyuge && !conyuge.telefono) {
+      return alert('Debe registrar el número de teléfono del Cónyuge antes de continuar.')
+    }
+
+    if (hasAvales && avales.length > 0) {
+      const avalSinTelefono = avales.find(a => !a.telefono)
+      if (avalSinTelefono) {
+        return alert(`Debe registrar el teléfono para el aval: ${avalSinTelefono.nombres_apellidos || 'Aval sin nombre'}`)
+      }
+    }
+
     const changed = []
     for (const key of ALL_EDITABLE) {
       if (String(originalData[key] ?? '') !== String(editData[key] ?? '')) changed.push(key)
@@ -558,6 +586,14 @@ export function SolicitudForm({
                               <Label className="text-[10px] uppercase text-slate-500 font-bold">Ingresos</Label>
                               <Input value={formatCurrency(conyuge.ingresos || 0)} readOnly className="h-8 bg-slate-50 text-xs font-bold" />
                           </div>
+                          <div>
+                              <Label className="text-[10px] uppercase text-indigo-500 font-bold">Teléfono Cónyuge</Label>
+                              <Input 
+                                value={conyuge.telefono || ''} 
+                                onChange={e => setConyuge({...conyuge, telefono: e.target.value})} 
+                                className="h-8 bg-white border-indigo-200 text-xs font-bold" 
+                              />
+                          </div>
                           <div className="md:col-span-4">
                               <Label className="text-[10px] uppercase text-slate-500 font-bold">Central de Riesgo</Label>
                               <Input value={conyuge.riesgo || ''} readOnly className="h-8 bg-slate-50 text-xs font-bold" />
@@ -670,8 +706,16 @@ export function SolicitudForm({
                             <Input value={formatCurrency(item.ingresos || 0)} readOnly className="h-7 text-xs font-bold bg-white text-right" />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-[9px] uppercase font-bold text-slate-400">Teléfono</Label>
-                            <Input value={item.telefono} readOnly className="h-7 text-xs font-medium bg-white" />
+                            <Label className="text-[9px] uppercase font-bold text-indigo-400">Teléfono</Label>
+                            <Input 
+                              value={item.telefono || ''} 
+                              onChange={e => {
+                                const n = [...avales]
+                                n[idx].telefono = e.target.value
+                                setAvales(n)
+                              }}
+                              className="h-7 text-xs font-bold bg-white border-indigo-100" 
+                            />
                           </div>
                           <div className="md:col-span-3 space-y-1">
                             <Label className="text-[9px] uppercase font-bold text-slate-400">Dirección</Label>
@@ -689,68 +733,128 @@ export function SolicitudForm({
               <CardHeader className="py-3 bg-green-50/50 border-b">
                 <CardTitle className="text-sm font-bold text-green-900 uppercase">REQUERIMIENTO DE CRÉDITO</CardTitle>
               </CardHeader>
-              <CardContent className="p-4">
+              <CardContent className="p-4 space-y-4">
+                {/* Row 1: Product + Category */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                  <div className="md:col-span-4 space-y-1">
+                  <div className="md:col-span-5 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Producto Financiero</Label>
                     <Select value={credito.producto} onValueChange={(v: string | null) => setCredito({ ...credito, producto: v || '' })}>
-                      <SelectTrigger className="h-9 text-[11px] font-bold uppercase overflow-hidden bg-white"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {products.map((p: any) => <SelectItem key={p.name} value={p.name} className="text-[11px] uppercase font-bold">{p.name}</SelectItem>)}
+                      <SelectTrigger className="h-10 text-xs font-bold uppercase bg-white">
+                        <SelectValue placeholder="Seleccione un producto" />
+                      </SelectTrigger>
+                      <SelectContent className="max-w-[450px]">
+                        {products.map((p: any) => (
+                          <SelectItem key={p.name} value={p.name} className="text-xs uppercase font-bold py-2">
+                            <div className="flex justify-between items-center w-full gap-4">
+                              <span>{p.name}</span>
+                              {p.plazo_min !== undefined && (
+                                <span className="text-[9px] text-slate-400 font-medium normal-case">({p.plazo_min}-{p.plazo_max} meses)</span>
+                              )}
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="md:col-span-2 space-y-1">
-                    <Label className="text-[10px] uppercase text-slate-500 font-bold">Condición (Tasa)</Label>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-[10px] uppercase text-slate-500 font-bold">Condición (Clasificación)</Label>
                     <Select value={socioClasificacion} onValueChange={(v: string | null) => setClasificacionOverride(v || 'Normal')}>
-                      <SelectTrigger className="h-9 text-[11px] font-bold uppercase bg-white"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-10 text-xs font-bold uppercase bg-white"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        {categories.map(cat => <SelectItem key={cat} value={cat} className="text-[11px] uppercase font-bold">{cat}</SelectItem>)}
+                        {categories.map(cat => <SelectItem key={cat} value={cat} className="text-xs uppercase font-bold">{cat}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="md:col-span-2 space-y-1">
+                    <Label className="text-[10px] uppercase text-slate-500 font-bold">TEA (%)</Label>
+                    <div className="h-10 flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-sm font-black text-green-700">
+                      {resolvedTea.toFixed(2)}%
+                    </div>
+                  </div>
+                  <div className="md:col-span-2 space-y-1">
+                    <Label className="text-[10px] uppercase text-slate-500 font-bold flex items-center gap-1">
+                      TEM (%) <Pencil className="w-2.5 h-2.5 text-blue-400" />
+                    </Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder={baseTem.toFixed(2)}
+                      value={temOverride}
+                      onChange={e => setTemOverride(e.target.value)}
+                      className={`h-10 text-sm font-black text-center ${temOverride !== '' ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white text-green-700'}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 2: Monto, Plazo, Destino */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div className="md:col-span-3 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Monto Solicitado (S/)</Label>
                     <Input 
                       type="text" 
                       value={formatNumber(credito.monto_solicitado)} 
                       onChange={e => setCredito({ ...credito, monto_solicitado: parseFormattedNumber(e.target.value) })} 
-                      className="h-9 text-sm font-bold bg-amber-50/10 text-right border-blue-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
+                      className="h-10 text-sm font-bold bg-white text-right border-blue-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" 
                     />
                   </div>
                   <div className="md:col-span-2 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Plazo (Meses)</Label>
-                    <Input type="number" value={credito.plazo_meses} onChange={e => setCredito({ ...credito, plazo_meses: e.target.value })} className="h-9 text-sm font-bold text-center bg-white" />
+                    <Input type="number" value={credito.plazo_meses} onChange={e => setCredito({ ...credito, plazo_meses: e.target.value })} className="h-10 text-sm font-bold text-center bg-white" />
+                    {selectedProduct?.plazo_min !== undefined && (
+                      <p className="text-[9px] text-slate-400 font-medium text-center">Rango: {selectedProduct.plazo_min} - {selectedProduct.plazo_max} meses</p>
+                    )}
                   </div>
-                  <div className="md:col-span-2 space-y-1">
+                  <div className="md:col-span-4 space-y-1">
                     <Label className="text-[10px] uppercase text-slate-500 font-bold">Destino del Crédito</Label>
-                    <Input value={credito.destino_credito} onChange={e => setCredito({ ...credito, destino_credito: e.target.value })} className="h-9 text-xs font-medium bg-white" />
+                    <Input value={credito.destino_credito} onChange={e => setCredito({ ...credito, destino_credito: e.target.value })} className="h-10 text-xs font-medium bg-white" />
+                  </div>
+                  <div className="md:col-span-3 space-y-1">
+                    <Label className="text-[10px] uppercase text-slate-500 font-bold">Cuota Mensual Estimada</Label>
+                    <div className="h-10 flex items-center justify-center rounded-md border border-green-200 bg-green-50 text-lg font-black text-green-700">
+                      {simulatedCuota > 0 ? formatCurrency(simulatedCuota) : 'S/ 0.00'}
+                    </div>
                   </div>
                 </div>
 
+                {temOverride !== '' && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-lg">
+                    <Pencil className="w-3 h-3 text-blue-500" />
+                    <span className="text-[10px] font-bold text-blue-600">TEM editada manualmente: {parseFloat(temOverride).toFixed(2)}% (base: {baseTem.toFixed(2)}%)</span>
+                    <button onClick={() => setTemOverride('')} className="ml-auto text-[10px] font-bold text-blue-400 hover:text-blue-600 underline">Restaurar</button>
+                  </div>
+                )}
+
                 {simulatedCuota > 0 && (
-                  <div className="mt-6 p-6 bg-slate-900 rounded-2xl text-white shadow-xl relative overflow-hidden group">
+                  <div className="p-5 bg-slate-900 rounded-2xl text-white shadow-xl relative overflow-hidden group">
                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <TrendingUp className="w-24 h-24" />
+                        <TrendingUp className="w-20 h-20" />
                      </div>
                      <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
                         <div>
-                          <div className="flex justify-between items-center mb-1">
+                          <div className="flex justify-between items-center mb-1 gap-4">
                             <p className="text-xs uppercase font-bold text-slate-400 tracking-widest">Cuota Mensual Proyectada</p>
                             <div className="flex items-center gap-1 bg-green-500/20 px-2 py-0.5 rounded text-[10px] font-black text-green-400 uppercase">
                                <TrendingUp className="w-3 h-3" /> {socioClasificacion}
                             </div>
                           </div>
-                          <p className="text-5xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">{formatCurrency(simulatedCuota)}</p>
+                          <p className="text-4xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.3)]">{formatCurrency(simulatedCuota)}</p>
                         </div>
-                        <div className="flex gap-8 text-center border-l border-slate-700 pl-8">
+                        <div className="flex gap-6 text-center border-l border-slate-700 pl-6">
                           <div>
-                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Tasa Anual (TEA)</p>
-                            <p className="text-xl font-bold text-green-500">{resolvedTea.toFixed(2)}%</p>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">TEA</p>
+                            <p className="text-lg font-bold text-green-500">{resolvedTea.toFixed(2)}%</p>
                           </div>
                           <div>
-                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Tasa Mensual (TEM)</p>
-                            <p className="text-xl font-bold text-green-500">{resolvedTem.toFixed(2)}%</p>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">TEM</p>
+                            <p className={`text-lg font-bold ${temOverride !== '' ? 'text-blue-400' : 'text-green-500'}`}>{resolvedTem.toFixed(2)}%</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Producto</p>
+                            <p className="text-[11px] font-bold text-white/80">{credito.producto}</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] uppercase font-bold text-slate-500 mb-1">Plazo</p>
+                            <p className="text-lg font-bold text-white">{credito.plazo_meses}m</p>
                           </div>
                         </div>
                      </div>

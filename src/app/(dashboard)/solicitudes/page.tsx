@@ -3,6 +3,7 @@ import { Plus, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { getSolicitudes } from '@/app/actions/solicitudes'
+import { createClient } from '@/lib/supabase/server'
 import { DeleteSolicitudButton } from '@/components/solicitudes/DeleteSolicitudButton'
 import { formatCurrency } from '@/lib/utils/format'
 
@@ -22,6 +23,11 @@ const estadoBadge = (estado: string) => {
 
 export default async function SolicitudesPage() {
   const solicitudes = await getSolicitudes()
+  
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single()
+  const isPrivileged = profile?.role === 'SUPER_ADMIN' || profile?.role === 'SUPERVISOR'
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,7 +85,7 @@ export default async function SolicitudesPage() {
                         <Eye className="h-4 w-4 text-blue-600" />
                       </Button>
                     </Link>
-                    {sol.estado === 'EN_REVISION' && (
+                    {(isPrivileged || sol.estado === 'EN_REVISION') && (
                       <DeleteSolicitudButton id={sol.id} numero={String(sol.correlativo).padStart(3, '0')} />
                     )}
                   </TableCell>

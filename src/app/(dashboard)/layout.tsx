@@ -25,11 +25,28 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     }
   }
 
+  // Fetch profile for name and role
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, role')
+    .eq('id', user?.id)
+    .single()
+
+  const userDisplayName = profile?.full_name || 'Usuario'
+  const userEmail = user?.email || ''
+
+  // Fetch dynamic count for Sidebar badge
+  const { count: solicitudesCount } = await supabase
+    .from('solicitudes')
+    .select('*', { count: 'exact', head: true })
+    .eq('estado', 'EN_REVISION')
+    .eq('analista_id', user?.id)
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--background)] print:h-auto print:overflow-visible print:block">
-      <Sidebar allowedModules={allowedModules} />
+      <Sidebar allowedModules={allowedModules} solicitudesCount={solicitudesCount} />
       <div className="flex flex-1 flex-col overflow-hidden ml-72 print:m-0 print:p-0 print:ml-0 print:overflow-visible print:h-auto print:block">
-        <Header />
+        <Header userName={userDisplayName} userEmail={userEmail} />
         <main className="flex-1 overflow-y-auto p-8 lg:p-12 print:p-0 print:m-0 print:overflow-visible print:h-auto print:block">
           {children}
         </main>

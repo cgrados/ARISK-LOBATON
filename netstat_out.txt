@@ -1,0 +1,14 @@
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:3000            0.0.0.0:*               LISTEN      872379/docker-proxy 
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      543/systemd-resolve 
+tcp        0      0 127.0.0.54:53           0.0.0.0:*               LISTEN      543/systemd-resolve 
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      1/init              
+tcp6       0      0 :::7946                 :::*                    LISTEN      867783/dockerd      
+tcp6       0      0 :::3000                 :::*                    LISTEN      872385/docker-proxy 
+tcp6       0      0 :::2377                 :::*                    LISTEN      867783/dockerd      
+tcp6       0      0 :::22                   :::*                    LISTEN      1/init              
+udp        0      0 127.0.0.54:53           0.0.0.0:*                           543/systemd-resolve 
+udp        0      0 127.0.0.53:53           0.0.0.0:*                           543/systemd-resolve 
+udp        0      0 0.0.0.0:4789            0.0.0.0:*                           -                   
+udp6       0      0 :::7946                 :::*                                867783/dockerd      
