@@ -1,75 +1,57 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { signIn } from '@/app/actions/auth'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Label } from '@/components/ui/label'
+import { useSearchParams } from 'next/navigation'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      router.push('/dashboard')
-    }
-  }
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <Card className="w-full max-w-sm">
-        <form onSubmit={handleLogin}>
+        <form action={signIn}>
           <CardHeader>
             <CardTitle className="text-2xl">Iniciar Sesión</CardTitle>
             <CardDescription>Ingresa tus credenciales para acceder a ARISK.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
-            {error && <div className="text-sm font-medium text-red-500">{error}</div>}
+            {error && (
+              <div className="p-3 bg-red-100 text-red-700 text-sm rounded-md border border-red-200">
+                {error}
+              </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="email">Correo Electrónico</Label>
-              <Input
+              <input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="m@ejemplo.com"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input
+              <input
                 id="password"
+                name="password"
                 type="password"
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               />
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full" type="submit" disabled={loading}>
-              {loading ? 'Ingresando...' : 'Ingresar'}
-            </Button>
+            <button 
+              className="w-full h-10 rounded-md bg-blue-600 text-white font-medium hover:bg-blue-700 active:bg-blue-800" 
+              type="submit"
+            >
+              Ingresar
+            </button>
           </CardFooter>
         </form>
       </Card>

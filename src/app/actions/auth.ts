@@ -16,3 +16,26 @@ export async function signOut() {
   redirect('/login')
 }
 
+export async function signIn(formData: FormData) {
+  const email = formData.get('email') as string
+  const password = formData.get('password') as string
+  
+  const supabase = await createClient()
+  
+  console.log('Server Action: Intentando login para:', email)
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (error) {
+    console.error('Server Action Error:', error.message)
+    return redirect(`/login?error=${encodeURIComponent(error.message)}`)
+  }
+
+  console.log('Server Action: Login exitoso')
+  revalidatePath('/', 'layout')
+  return redirect('/dashboard')
+}
+
