@@ -43,7 +43,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     .eq('analista_id', user?.id)
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[var(--background)] print:h-auto print:overflow-visible print:block">
+    <div className="flex h-screen w-full overflow-hidden bg-[#f8fafc] print:h-auto print:overflow-visible print:block">
       <Sidebar allowedModules={allowedModules} solicitudesCount={solicitudesCount} />
       <div className="flex flex-1 flex-col overflow-hidden ml-72 print:m-0 print:p-0 print:ml-0 print:overflow-visible print:h-auto print:block">
         <Header userName={userDisplayName} userEmail={userEmail} />

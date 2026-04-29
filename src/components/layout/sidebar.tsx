@@ -41,69 +41,68 @@ export function Sidebar({ allowedModules, solicitudesCount }: SidebarProps) {
 
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 flex w-72 flex-col bg-[#f8f9fa] border-r border-slate-200 shadow-sm transition-all print:hidden">
+    <aside className="fixed inset-y-0 left-0 z-20 flex w-72 flex-col bg-[#161065] border-r border-white/10 shadow-2xl shadow-black/50 transition-all print:hidden">
 
-      <div className="flex h-20 items-center px-8 gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 shadow-lg shadow-slate-200">
-          <Gauge className="h-7 w-7 text-blue-400" />
+      <div className="flex h-24 items-center px-8 gap-4 border-b border-white/5">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ffcc00] to-[#b28f00] shadow-lg shadow-gold/20 animate-pulse">
+          <Gauge className="h-7 w-7 text-[#161065]" />
         </div>
-        <span className="text-xl font-black tracking-tighter text-slate-900 leading-none">A.RISK V1.0</span>
+        <div className="flex flex-col">
+          <span className="text-xl font-black tracking-tighter text-white leading-none">A.RISK</span>
+          <span className="text-[10px] font-bold text-[#ffcc00] uppercase tracking-[0.2em] mt-1">Enterprise ERM</span>
+        </div>
       </div>
-
-
-
-
-
       
-      <div className="flex-1 overflow-auto py-6 no-scrollbar">
-        <div className="px-8 mb-6">
-           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">General</span>
+      <div className="flex-1 overflow-auto py-8 no-scrollbar">
+        <div className="px-8 mb-6 flex items-center justify-between">
+           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Navigation</span>
+           <div className="h-px flex-1 ml-4 bg-white/5"></div>
         </div>
 
-        <nav className="flex flex-col gap-1 px-4">
+        <nav className="flex flex-col gap-2 px-4">
           {navItems.filter(item => hasAccess(item.id)).map((item) => {
             const isActive = pathname === item.href || (item.id === 'configuraciones' && pathname?.startsWith('/configuracion'))
             
             return (
               <div key={item.id} className="flex flex-col gap-1">
                 <Link 
-                  href={item.href} 
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all group border border-transparent ${
-                    isActive 
-                    ? 'bg-sky-100/50 text-sky-700 shadow-sm border-sky-100' 
-                    : 'text-slate-600 hover:bg-white hover:border-slate-100 hover:shadow-sm'
-                  }`}
+                   href={item.href} 
+                   className={`flex items-center gap-4 px-5 py-3.5 rounded-2xl transition-all group border ${
+                     isActive 
+                     ? 'bg-[#ffcc00] text-[#161065] shadow-xl shadow-black/50 border-[#ffcc00]' 
+                     : 'text-white/50 hover:bg-white/5 hover:text-white border-transparent'
+                   }`}
                 >
-                  <item.icon className={`h-6 w-6 ${isActive ? 'text-sky-600' : item.color} group-hover:scale-110 transition-transform`} />
-                  <span className={`text-base font-bold transition-colors ${isActive ? 'text-sky-800' : 'group-hover:text-slate-900'}`}>
+                  <item.icon className={`h-6 w-6 ${isActive ? 'text-[#161065]' : 'text-[#ffcc00]'} group-hover:scale-110 transition-transform`} />
+                  <span className={`text-sm font-black transition-colors ${isActive ? 'text-[#161065]' : 'group-hover:text-white'}`}>
                     {item.label}
                   </span>
                   {item.id === 'solicitudes' && solicitudesCount !== undefined && solicitudesCount !== null && solicitudesCount > 0 && (
-                    <span className="ml-auto text-[10px] font-bold bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+                    <span className={`ml-auto text-[10px] font-bold px-2 py-0.5 rounded-full ${isActive ? 'bg-[#161065] text-[#ffcc00]' : 'bg-[#ffcc00] text-[#161065]'}`}>
                       {solicitudesCount}
                     </span>
                   )}
                 </Link>
                 
-                {item.id === 'configuraciones' && (
-                  <div className="flex flex-col gap-1 ml-14 mb-2">
+                {item.id === 'configuraciones' && isActive && (
+                  <div className="flex flex-col gap-1 ml-14 my-2 border-l border-white/10 pl-4 animate-in fade-in slide-in-from-left-2 duration-300">
                     <Link 
                       href="/configuracion/credito" 
-                      className={`text-sm font-semibold py-1.5 transition-colors ${pathname === '/configuracion/credito' ? 'text-sky-600' : 'text-slate-500 hover:text-sky-600'}`}
+                      className={`text-xs font-bold py-2 transition-colors ${pathname === '/configuracion/credito' ? 'text-[#ffcc00]' : 'text-white/50 hover:text-[#ffcc00]'}`}
                     >
-                      Tasas y Productos
+                      TASAS Y PRODUCTOS
                     </Link>
                     <Link 
                       href="/configuracion/empresa" 
-                      className={`text-sm font-semibold py-1.5 transition-colors ${pathname === '/configuracion/empresa' ? 'text-sky-600' : 'text-slate-500 hover:text-sky-600'}`}
+                      className={`text-xs font-bold py-2 transition-colors ${pathname === '/configuracion/empresa' ? 'text-[#ffcc00]' : 'text-white/50 hover:text-[#ffcc00]'}`}
                     >
-                      Datos de Empresa
+                      DATOS DE EMPRESA
                     </Link>
                     <Link 
                       href="/configuracion/evaluacion" 
-                      className={`text-sm font-semibold py-1.5 transition-colors ${pathname === '/configuracion/evaluacion' ? 'text-sky-600' : 'text-slate-500 hover:text-sky-600'}`}
+                      className={`text-xs font-bold py-2 transition-colors ${pathname === '/configuracion/evaluacion' ? 'text-[#ffcc00]' : 'text-white/50 hover:text-[#ffcc00]'}`}
                     >
-                      Motor de Scoring
+                      MOTOR DE SCORING
                     </Link>
                   </div>
                 )}
@@ -114,13 +113,14 @@ export function Sidebar({ allowedModules, solicitudesCount }: SidebarProps) {
 
       </div>
 
-      <div className="p-8 mt-auto border-t border-slate-100">
-         <button className="flex items-center gap-4 text-slate-500 hover:text-slate-900 transition-all font-semibold text-sm">
-            <ShieldCheck className="h-5 w-5 text-emerald-500" />
-            FAQ
+      <div className="p-8 mt-auto border-t border-white/5">
+         <button className="flex items-center gap-4 text-white/50 hover:text-[#ffcc00] transition-all font-bold text-xs uppercase tracking-widest">
+            <ShieldCheck className="h-5 w-5 text-[#ffcc00]" />
+            Soporte Técnico
          </button>
       </div>
     </aside>
+
   )
 }
 
