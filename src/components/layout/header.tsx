@@ -34,7 +34,7 @@ export function Header({ userName, userEmail }: HeaderProps) {
       <div className="flex flex-1 items-center gap-6">
         <div className="relative w-full max-w-lg group">
           <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-white/30 group-focus-within:text-[#ffcc00] transition-colors" />
+            <Search className="h-4 w-4 text-slate-400 group-focus-within:text-[#161065] transition-colors" />
           </div>
           <input
             type="search"
@@ -46,22 +46,22 @@ export function Header({ userName, userEmail }: HeaderProps) {
 
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 bg-[#161065] border border-white/10 px-3 py-1.5 rounded-full shadow-lg shadow-black/20">
+          <div className="flex items-center gap-1.5 bg-[#161065] border border-[#161065]/20 px-4 py-1.5 rounded-full shadow-lg shadow-indigo-100">
             <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></div>
-            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Estado Pipeline</span>
-            <span className="text-[10px] font-black text-[#161065] uppercase tracking-widest ml-1">Estable</span>
+            <span className="text-[10px] font-black text-white/70 uppercase tracking-widest">Estado Pipeline</span>
+            <span className="text-[10px] font-black text-[#ffcc00] uppercase tracking-widest ml-1">Estable</span>
           </div>
-          <div className="bg-red-500/10 border border-red-500/20 px-3 py-1.5 rounded-full">
-            <span className="text-[10px] font-black text-red-400 uppercase tracking-widest">5 riesgos detectados</span>
+          <div className="bg-red-50 border border-red-100 px-3 py-1.5 rounded-full">
+            <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">5 riesgos detectados</span>
           </div>
         </div>
 
-        <button className="relative p-2 text-white/50 hover:text-white transition-colors">
+        <button className="relative p-2 text-slate-400 hover:text-[#161065] transition-colors">
           <Bell className="h-5 w-5" />
           <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 border-2 border-white"></span>
         </button>
 
-        <div className="h-8 w-px bg-white/10"></div>
+        <div className="h-8 w-px bg-slate-200"></div>
 
         <div className="relative" ref={menuRef}>
           <button 
@@ -75,31 +75,31 @@ export function Header({ userName, userEmail }: HeaderProps) {
             <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-[#161065] to-[#2a1f8a] border border-white/10 flex items-center justify-center shadow-lg shadow-black/30 overflow-hidden group cursor-pointer">
                <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${userName || 'U'}`} alt="Avatar" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
             </div>
-            <ChevronDown className={`w-3 h-3 text-white/50 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {isMenuOpen && (
-            <div className="absolute right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 animate-in fade-in zoom-in-95 duration-200">
-              <div className="px-6 py-4 border-b border-white/5 mb-2">
-                <p className="text-sm font-black text-white uppercase tracking-tight truncate">
+            <div className="absolute right-0 mt-4 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 py-3 animate-in fade-in zoom-in-95 duration-200">
+              <div className="px-6 py-4 border-b border-slate-100 mb-2">
+                <p className="text-sm font-black text-[#161065] uppercase tracking-tight truncate">
                   {userName || 'Usuario'}
                 </p>
-                <p className="text-[10px] text-white/40 truncate lowercase font-bold tracking-widest mt-1">
+                <p className="text-[10px] text-slate-400 truncate lowercase font-bold tracking-widest mt-1">
                   {userEmail || 'Socio Administrador'}
                 </p>
               </div>
               
-              <button className="w-full flex items-center gap-4 px-6 py-3 text-[10px] text-white/70 hover:bg-white/5 hover:text-[#ffcc00] transition-colors text-left uppercase font-black tracking-widest">
+              <button className="w-full flex items-center gap-4 px-6 py-3 text-[10px] text-slate-600 hover:bg-slate-50 hover:text-[#161065] transition-colors text-left uppercase font-black tracking-widest">
                 <User className="w-4 h-4" />
                 Mi Perfil
               </button>
               
-              <div className="h-px bg-white/5 my-2 mx-4" />
+              <div className="h-px bg-slate-100 my-2 mx-4" />
               
               <form action={signOut}>
                 <button 
                   type="submit"
-                  className="w-full flex items-center gap-4 px-6 py-3 text-[10px] text-red-400 hover:bg-red-500/10 transition-colors text-left uppercase font-black tracking-widest"
+                  className="w-full flex items-center gap-4 px-6 py-3 text-[10px] text-red-500 hover:bg-red-50 transition-colors text-left uppercase font-black tracking-widest"
                 >
                   <LogOut className="w-4 h-4" />
                   Cerrar Sesión
